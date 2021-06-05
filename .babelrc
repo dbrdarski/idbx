@@ -1,0 +1,13 @@
+{
+  "presets": [
+  	[
+      "@babel/preset-env",
+    	{
+        "forceAllTransforms": false,
+        "browserslists": ["last 1 Chrome version"],
+        "modules": true,
+        "debug": false
+      }
+    ]
+  ]
+}
