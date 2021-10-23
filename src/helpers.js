@@ -1,11 +1,11 @@
-export const createStore = ({ SymbolType, serializer }) => store(SymbolType, serializer)
+export const createStore = ({ SymbolType, serializer, handler }) => store(SymbolType, serializer, handler)
 
-const store = (SymbolType, serializer, inheritFromStore = {}) => {
+const store = (SymbolType, serializer, handler, inheritFromStore = {}) => {
   const values = Object.create(inheritFromStore.values || null)
   const keys = Object.create(inheritFromStore.keys || null)
   let counter = 0n
   return {
-    fork: () => store(SymbolType, serializer, inheritFromStore = { keys, values }),
+    fork: () => store(SymbolType, serializer, handler, inheritFromStore = { keys, values }),
     getValue: key => values[key],
     getKey: write => value => {
       const str_value = serializer
@@ -14,7 +14,9 @@ const store = (SymbolType, serializer, inheritFromStore = {}) => {
       if (!(str_value in keys)) {
         write(str_value)
         const key = keys[str_value] = SymbolType.fromNumeric(counter++)
-        values[key] = value
+        values[key] = handler
+          ? handler(value)
+          : value
         return key
       }
       return keys[str_value]
@@ -35,23 +37,4 @@ export const deserializeObject = (keys, values) => {
   return o
 }
 
-// export const getFilenames = (name, path) => {
-//   const documentPath = `${path}/${name}`
-//   const documentSettings = `${documentPath}/settings.db`
-//   const recordsFile = `${documentPath}/records.idb`
-//   const indexFile = `${documentPath}/index.idx`
-//   return { documentPath, recordsFile, indexFile }
-// }
-
-// export const mapShapeKeysFactory = ([ getRecord, getIndex ]) => shape => {
-//   shape.map(getIndex)
-// }
-
-// export const shapeFactory = (stringStore) => {
-//   const [ getRecord, getIndex ] = stringStore
-//   return {
-//     serializeObjectShape: (shape) => shape.map(pipe2(getIndex, encodeInt)).join(',')
-//   }
-// }
-
-// const serializeObjectShape = shape => `{${shape.join(',')}}`
+export const getRecordId = counter => Number(counter) + 1

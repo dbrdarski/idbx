@@ -1,4 +1,4 @@
-import { encodeInt, decodeInt } from './utils.js'
+import { encodeInt, decodeInt } from "./utils.js"
 
 export class TypeSymbol extends String {
   static fromNumeric (x) {
@@ -31,6 +31,12 @@ export class ObjectSymbol extends TypeSymbol {
 }
 
 export class StringSymbol extends TypeSymbol {
+  toString () {
+    return `S${this.valueOf()}`
+  }
+}
+
+export class RecordSymbol extends TypeSymbol {
   toString () {
     return `S${this.valueOf()}`
   }

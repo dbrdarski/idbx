@@ -1,22 +1,29 @@
-import { readFile, appendFile } from 'fs/promises'
-import { read, match } from './index.js'
-import { matchType, matchToken, allStores } from './stores.js'
-import { noop, mapToReduce } from './utils.js'
-import { tokenize } from './parser/tokenizer.js'
+import { readFile, appendFile } from "fs/promises"
+import fs from "fs"
+// import { read, match } from "./index.js"
+import { initDocument } from "./stores.js"
+import { noop, mapToReduce } from "./utils.js"
+import { tokenize } from "./parser/tokenizer.js"
 
 export const write = (output = []) => (value) => output.push(value)
 
+const stores = new WeakMap
+const privateScope = (key) => stores.get(key)
+
 export default class Database {
+  constructor (file) {
+    Object.defineProperty(this, "filename", { value: file })
+    this.data = null
+  }
   static async create (file) {
     const instance = new this(file)
 
     if (fs.existsSync(instance.filename)){
-      throw Error ('Database already exists!')
+      throw Error ("Database already exists!")
     }
-    console.log(`CREATED ${instance.filename}`)
     // fs.mkdirSync(documentPath)
-    fs.closeSync(fs.openSync(instance.filename, 'w'))
-
+    fs.closeSync(fs.openSync(instance.filename, "w"))
+    console.log(`CREATED ${instance.filename}`)
     await instance.load()
     return instance
   }
@@ -25,15 +32,13 @@ export default class Database {
     await instance.load()
     return instance
   }
-  constructor (file) {
-    Object.defineProperty(this, 'filename', { value: file })
-    this.data = null
-  }
   async load () {
+    // const { matchType, matchToken, allStores } = initDocument()
+    stores.set(this, initDocument())
     const data = await readFile(this.filename)
     try {
       const pData = tokenize(data.toString())
-      const result = pData.reduce(mapToReduce(matchToken(noop)), null)
+      const result = pData.reduce(mapToReduce(privateScope(this).matchToken(noop)), null)
       // console.log(result)
       // const result = JSON.stringify(pData.map(matchToken(write)), 2, 3)
       this.data = result
@@ -41,9 +46,10 @@ export default class Database {
       console.error(e)
     }
   }
-  save (data) {
+  save (data, prev) {
     const output = []
-    const result = matchType(write(output))(data)
-    return appendFile(this.filename, output.join(''))
+    const meta = { author: "Dane Brdarski", timestamp: Date.now() }
+    const result = privateScope(this).matchType(write(output))({ data, meta, prev })
+    return appendFile(this.filename, output.join(""))
   }
 }
