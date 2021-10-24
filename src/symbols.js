@@ -4,11 +4,11 @@ export class TypeSymbol extends String {
   static fromNumeric (x) {
     return new this(encodeInt(x))
   }
-  toBigInt (x) {
-    return decodeInt(this)
+  toBigInt () {
+    return decodeInt(this.valueOf())
   }
-  toNumber (x) {
-    return Number(decodeInt(this))
+  toNumber () {
+    return Number(decodeInt(this.valueOf()))
   }
 }
 
@@ -38,6 +38,6 @@ export class StringSymbol extends TypeSymbol {
 
 export class RecordSymbol extends TypeSymbol {
   toString () {
-    return `S${this.valueOf()}`
+    return `R${this.valueOf()}`
   }
 }

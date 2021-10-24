@@ -8,7 +8,7 @@ import { tokenize } from "./parser/tokenizer.js"
 export const write = (output = []) => (value) => output.push(value)
 
 const stores = new WeakMap
-const privateScope = (key) => stores.get(key)
+const databaseInstance = (key) => stores.get(key)
 
 export default class Database {
   constructor (file) {
@@ -38,7 +38,7 @@ export default class Database {
     const data = await readFile(this.filename)
     try {
       const pData = tokenize(data.toString())
-      const result = pData.reduce(mapToReduce(privateScope(this).matchToken(noop)), null)
+      const result = pData.reduce(mapToReduce(databaseInstance(this).matchToken(noop)), null)
       // console.log(result)
       // const result = JSON.stringify(pData.map(matchToken(write)), 2, 3)
       this.data = result
@@ -49,7 +49,8 @@ export default class Database {
   save (data, prev) {
     const output = []
     const meta = { author: "Dane Brdarski", timestamp: Date.now() }
-    const result = privateScope(this).matchType(write(output))({ data, meta, prev })
+    const result = databaseInstance(this).addRecord(write(output))({ data, meta, prev })
+    console.log({ id: result })
     return appendFile(this.filename, output.join(""))
   }
 }

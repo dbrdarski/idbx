@@ -7,7 +7,7 @@ const store = (SymbolType, serializer, handler, inheritFromStore = {}) => {
   return {
     fork: () => store(SymbolType, serializer, handler, inheritFromStore = { keys, values }),
     getValue: key => values[key],
-    getKey: write => value => {
+    getKey: write => (value, isRecord) => {
       const str_value = serializer
         ? serializer(write)(value)
         : value
@@ -15,7 +15,7 @@ const store = (SymbolType, serializer, handler, inheritFromStore = {}) => {
         write(str_value)
         const key = keys[str_value] = SymbolType.fromNumeric(counter++)
         values[key] = handler
-          ? handler(value)
+          ? handler(value, counter)
           : value
         return key
       }
@@ -37,4 +37,4 @@ export const deserializeObject = (keys, values) => {
   return o
 }
 
-export const getRecordId = counter => Number(counter) + 1
+// export const getRecordId = counter => Number(counter) + 1

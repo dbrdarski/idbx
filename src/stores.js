@@ -1,5 +1,5 @@
 import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, RecordSymbol } from "./symbols.js"
-import { createStore, serializeObject, deserializeObject, getRecordId } from "./helpers.js"
+import { createStore, serializeObject, deserializeObject } from "./helpers.js"
 import { getType, submatch, encodeInt, decodeInt } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
 
@@ -26,9 +26,20 @@ export const initDocument = () => {
 
   const recordStore = createStore({
     SymbolType: RecordSymbol,
+    handler (value, index) {
+      value.meta = {
+        id: index.toString(),
+        ...value.meta
+      }
+      return value
+    },
     serializer: write => (value) => {
-      const [ data, meta, prev ] = serializeObject(value).map(matchType(write))
-      return `(${data}${meta}${prev})`
+      const data = matchType(write)(value.data)
+      const meta = matchType(write)(value.meta)
+      console.log({ data, meta })
+      console.log({ data: data.toString(), meta: meta.toString() })
+      // const [ data, meta ] = serializeObject(value).map(matchType(write))
+      return `(${data}${meta})`
     }
   })
 
@@ -76,8 +87,8 @@ export const initDocument = () => {
         return value
       }
       case "record": {
-        const [ data, meta, prev ] = matches.map(parseToken)
-        const value = { data, meta, prev }
+        const [ data, meta /* , prev */ ] = matches.map(parseToken)
+        const value = { data, meta /* , prev */ }
         recordStore.getKey(write)(value)
         return value
       }
@@ -132,9 +143,10 @@ export const initDocument = () => {
     stringStore,
     arrayStore,
     objectStore,
-    recrdStore,
+    recordStore,
     allStores,
     matchToken,
-    matchType
+    matchType,
+    addRecord
   }
 }
