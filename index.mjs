@@ -1,6 +1,6 @@
 import DB from "./src/db.mjs"
 import http from "http"
-// import { macros_article_JSON, cezare_borgia_JSON } from "./sample_data/index.js"
+import { macros_article_JSON, cezare_borgia_JSON } from "./sample_data/index.js"
 
 // const h = (tag, attrs = null, ...children) => new VNode({
 //   tag,
@@ -55,7 +55,7 @@ const file = "./files/wikipedia.idbx"
 //     : data
 
 // let counter = 0;
-// const data = cezare_borgia_JSON
+const data = cezare_borgia_JSON
 // const data = macros_article_JSON
 // const data = {a: 1, b: 2}
 // const data = {
