@@ -1,5 +1,3 @@
-import { readFile, appendFile } from "fs/promises"
-import fs from "fs"
 // import { read, match } from "./index.js"
 import { initDocument } from "./stores.js"
 import { noop, mapToReduce } from "./utils.js"
@@ -10,19 +8,16 @@ export const write = (output = []) => (value) => output.push(value)
 const stores = new WeakMap
 const databaseInstance = (key) => stores.get(key)
 
-export default class Database {
-  constructor (file) {
+class Database {
+  #adapter
+  constructor (adapter, file) {
+    this.#adapter = adapter
     Object.defineProperty(this, "filename", { value: file })
     this.data = null
   }
   static async create (file) {
     const instance = new this(file)
-
-    if (fs.existsSync(instance.filename)){
-      throw Error ("Database already exists!")
-    }
-    // fs.mkdirSync(documentPath)
-    fs.closeSync(fs.openSync(instance.filename, "w"))
+    this.#adapter.create(instance.filename)
     console.log(`CREATED ${instance.filename}`)
     await instance.load()
     return instance
@@ -35,7 +30,7 @@ export default class Database {
   async load () {
     // const { matchType, matchToken, allStores } = initDocument()
     stores.set(this, initDocument())
-    const data = await readFile(this.filename)
+    const data = await this.#adapter.open(this.filename))
     try {
       const pData = tokenize(data.toString())
       const result = pData.reduce(mapToReduce(databaseInstance(this).matchToken(noop)), null)
@@ -49,8 +44,11 @@ export default class Database {
   save (data, prev) {
     const output = []
     const meta = { author: "Dane Brdarski", timestamp: Date.now() }
+    // TODO: addRecord in next line needs to be replaced with addTaxonomy or something
     const result = databaseInstance(this).addRecord(write(output))({ data, meta, prev })
     console.log({ id: result })
-    return appendFile(this.filename, output.join(""))
+    return this.#adapter.write(this.filename, output.join(""))
   }
 }
+
+export default adapter => filename => new Database(adapter, filename)

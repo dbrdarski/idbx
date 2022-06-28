@@ -1,19 +1,25 @@
-export const createStore = ({ SymbolType, serializer, handler }) => store(SymbolType, serializer, handler)
+export const createStore = ({ SymbolType, serializer, handler, match }) => store(SymbolType, serializer, handler, match)
 
-const store = (SymbolType, serializer, handler, inheritFromStore = {}) => {
+const store = (SymbolType, serializer, handler, match = true, inheritFromStore = {}) => {
   const values = Object.create(inheritFromStore.values || null)
-  const keys = Object.create(inheritFromStore.keys || null)
+  const keys = match
+    ? Object.create(inheritFromStore.keys || null)
+    : null
   let counter = 0n
   return {
-    fork: () => store(SymbolType, serializer, handler, inheritFromStore = { keys, values }),
+    fork: () => store(SymbolType, serializer, handler, match, inheritFromStore = { keys, values }),
     getValue: key => values[key],
-    getKey: write => (value, isRecord) => {
+    getKey: write => value => {
       const str_value = serializer
-        ? serializer(write)(value)
+        ? serializer(write)(value, match ? void 0 : counter++)
         : value
-      if (!(str_value in keys)) {
+      if (!(match && str_value in keys)) {
         write(str_value)
-        const key = keys[str_value] = SymbolType.fromNumeric(counter++)
+        const key = SymbolType ? SymbolType.fromNumeric(counter) : counter
+        if (match) {
+          counter++
+          keys[str_value] = key
+        }
         values[key] = handler
           ? handler(value, counter)
           : value

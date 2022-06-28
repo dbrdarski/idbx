@@ -1,7 +1,9 @@
-import DB from "./src/db.mjs"
+import DBF from "./src/db.mjs"
 import http from "http"
 import { macros_article_JSON, cezare_borgia_JSON } from "./sample_data/index.js"
+import { ascii, browser } from "./src/adapters.js"
 
+const DB = DBF(ascii) 
 // const h = (tag, attrs = null, ...children) => new VNode({
 //   tag,
 //   attrs,

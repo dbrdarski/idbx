@@ -36,8 +36,26 @@ export class StringSymbol extends TypeSymbol {
   }
 }
 
+// export class IdentifierSymbol extends TypeSymbol {
+//   toString () {
+//     return `I${this.valueOf()}`
+//   }
+// }
+
 export class RecordSymbol extends TypeSymbol {
   toString () {
     return `R${this.valueOf()}`
+  }
+}
+
+export class TaxonomySymbol extends TypeSymbol {
+  toString () {
+    return `X${this.valueOf()}`
+  }
+}
+
+export class PublicationSymbol extends TypeSymbol {
+  toString () {
+    return `P${this.valueOf()}`
   }
 }

@@ -11,6 +11,7 @@ export const pipe2 = (x, y) => z => y(x(z))
 export const pipe = (...fns) => fns.reduce(pipe2)
 
 export const mapToReduce = fn => (acc, v) => fn(v)
+// export const mapToReduce = fn => (acc, v, i, arr) => fn(v, i, arr)
 
 const divrem = (a, b) => [ a / b, a % b ]
 const sum = (a, b) => a + b
