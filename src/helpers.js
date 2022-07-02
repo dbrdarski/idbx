@@ -15,7 +15,7 @@ const store = (SymbolType, serializer, handler, match = true, inheritFromStore =
         : value
       if (!(match && str_value in keys)) {
         write(str_value)
-        const key = SymbolType ? SymbolType.fromNumeric(counter) : counter
+        const key = SymbolType ? SymbolType.fromBigInt(counter) : counter
         if (match) {
           counter++
           keys[str_value] = key

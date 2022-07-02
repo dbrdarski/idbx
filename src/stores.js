@@ -1,9 +1,10 @@
-import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, RecordSymbol, TaxonomySymbol, PublicationSymbol } from "./symbols.js"
+import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, RecordSymbol, TaxonomySymbol, PublicationSymbol } from "./symbols.js"
 import { createStore, serializeObject, deserializeObject } from "./helpers.js"
-import { getType, submatch, encodeInt, decodeInt } from "./utils.js"
+import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
 
 const getNumberSymbol = (v) => NumberSymbol.fromNumeric(v)
+const getIntegerSymbol = (v) => IntegerSymbol.fromBigInt(v)
 
 /*
 Notes:
@@ -153,6 +154,8 @@ export const initDocument = () => {
     switch (type) {
       case "basic":
         return getBasicTokenValue(token)
+      case "bigint":
+          return getIntegerSymbol(token)
       case "number":
         return getNumberSymbol(token)
       // case "identifier":
@@ -216,9 +219,9 @@ export const initDocument = () => {
       case "V":
         return getBasicTokenValue(token)
       case "N":
-        return Number(decodeInt(token.substring(1)))
-      // case "I":
-      //   return identifierStore.getValue(token)
+        return decodeFloat(token.substring(1))
+      case "I":
+        return decodeInt(token.substring(1))
       case "S":
         return stringStore.getValue(token)
       case "A":
@@ -241,6 +244,8 @@ export const initDocument = () => {
         return "V"
       case "boolean":
         return value ? "T" : "F"
+      case "bigint":
+        return getIntegerSymbol(value)
       case "number":
         return getNumberSymbol(value)
       case "string":

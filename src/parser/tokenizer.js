@@ -33,7 +33,7 @@ export const tokenizer = parsers => str => {
 
 const allChars = '[^\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f !\\"#$%&"()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\\\]\\^\\_\\`abcdefghijklmnopqrstuvwxyz\\{\\|\\}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]'
 const singleValues = '[TFV]' // truw, false, void
-const referentialTypes = '[NOSARX]' // number, object, string, array, record, taxonomy
+const referentialTypes = '[NOSARIX]' // number, object, string, array, record, taxonomy
 const allValues = `${singleValues}|${referentialTypes}${allChars}+`
 
 // const identifier = /'(?:[^"\\]|\\.)*'/
@@ -45,7 +45,7 @@ const record = RegExp(`\\(([O]${allChars}+)([O]${allChars}+)\\)`)
 const taxonomyDefinition = RegExp(`\\<[S](${allChars}+)\\>`)
 const taxonomy = RegExp(`\\<[D](${allChars}+)\\>`)
 const taxonomyRecord = RegExp(`\\<[X](${allChars}+[R]${allChars}+)\\>`)
-export const allValuesRegex = Regex(allValues, 'g')
+export const allValuesRegex = RegExp(allValues, 'g')
 
 export const tokenize = tokenizer({
   basic,

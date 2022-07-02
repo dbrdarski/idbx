@@ -11,5 +11,8 @@
   "type": "module",
   "devDependencies": {
     "@babel/core": "^7.14.3"
+  },
+  "dependencies": {
+    "fs": "0.0.1-security"
   }
 }

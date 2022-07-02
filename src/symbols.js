@@ -1,7 +1,10 @@
-import { encodeInt, decodeInt } from "./utils.js"
+import { encodeInt, decodeInt, encodeFloat } from "./utils.js"
 
 export class TypeSymbol extends String {
   static fromNumeric (x) {
+    return new this(encodeFloat(x))
+  }
+  static fromBigInt (x) {
     return new this(encodeInt(x))
   }
   toBigInt () {
@@ -15,6 +18,12 @@ export class TypeSymbol extends String {
 export class NumberSymbol extends TypeSymbol {
   toString () {
     return `N${this.valueOf()}`
+  }
+}
+
+export class IntegerSymbol extends TypeSymbol {
+  toString () {
+    return `I${this.valueOf()}`
   }
 }
 
