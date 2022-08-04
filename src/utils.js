@@ -68,7 +68,8 @@ const hashSerializer = (radix) => [
 ]
 
 export const [ encodeInt, decodeInt ] = intSerializer(2n ** 16n - 2n ** 8n, 2n ** 8n)
-export const [ encodeHash, decodeHash ] = hashSerializer(16n ** 1n)
+export const [ encodeHashString, decodeHashString ] = intSerializer(2n ** 16n)
+export const [ encodeHash, decodeHash ] = hashSerializer(16n)
 
 export function floatToIntArray (f) {
   return new Uint32Array(Float64Array.of(f).buffer);

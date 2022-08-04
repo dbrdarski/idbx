@@ -15,15 +15,10 @@ export class TypeSymbol extends String {
   }
 }
 
+export class IntegerSymbol extends TypeSymbol {}
 export class NumberSymbol extends TypeSymbol {
   toString () {
     return `N${this.valueOf()}`
-  }
-}
-
-export class IntegerSymbol extends TypeSymbol {
-  toString () {
-    return `I${this.valueOf()}`
   }
 }
 
@@ -57,14 +52,20 @@ export class RecordSymbol extends TypeSymbol {
   }
 }
 
-export class TaxonomySymbol extends TypeSymbol {
+export class DocumentSymbol extends TypeSymbol {
   toString () {
-    return `X${this.valueOf()}`
+    return `D${this.valueOf()}`
   }
 }
 
-export class PublicationSymbol extends TypeSymbol {
-  toString () {
-    return `P${this.valueOf()}`
-  }
-}
+// export class TaxonomySymbol extends TypeSymbol {
+//   toString () {
+//     return `X${this.valueOf()}`
+//   }
+// }
+//
+// export class PublicationSymbol extends TypeSymbol {
+//   toString () {
+//     return `P${this.valueOf()}`
+//   }
+// }

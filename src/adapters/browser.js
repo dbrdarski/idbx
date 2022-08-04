@@ -11,4 +11,8 @@ export default Object.freeze({
   write (name, output) {
     return localStorage.setItem(name, `${localStorage.getItem(name)}${output}`)
   }
+  // id (size = 10) {
+  //   const id = crypto.getRandomValues(new Uint16Array(size)
+  //   return Array.from(id).map(x => String.fromCharCode(x)).join("")
+  // }
 })

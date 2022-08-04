@@ -1,10 +1,10 @@
-import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, RecordSymbol, TaxonomySymbol, PublicationSymbol } from "./symbols.js"
-import { createStore, serializeObject, deserializeObject } from "./helpers.js"
+import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, RecordSymbol, DocumentSymbol } from "./symbols.js"
+import { createStore, serializeObject, deserializeObject, generateUUID } from "./helpers.js"
 import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
 
 const getNumberSymbol = (v) => NumberSymbol.fromNumeric(v)
-const getIntegerSymbol = (v) => IntegerSymbol.fromBigInt(v)
+const getIntegerSymbol = (v) => `${v < 0 ? '-' : '+'}${IntegerSymbol.fromBigInt(v < 0 ? -1n * v : v)}`
 
 /*
 Notes:
@@ -78,65 +78,106 @@ export const initDocument = () => {
     }
   })
 
+  const documentStore = createStore({
+    SymbolType: DocumentSymbol,
+    // handler (type) {
+    //   const id = generateUUID()
+    //   return { id, type }
+    // },
+    serializer: write => document => {
+      const id = stringStore.getKey(write)(document.id)
+      const type = stringStore.getKey(write)(document.type)
+      return `<${id}${type}>`
+    }
+  })
+
+  // const documentStore = createStore({
+  //   match: false,
+  //   SymbolType: DocumentSymbol,
+  //   handler (type, id) {
+  //     return { id, type }
+  //   },
+  //   // <D1>,<D2>,<D3> for now - D1 is link to TaxonomyDefinition, the ID is derived from order (like in everything else!!!!!)
+  //   serializer: write => definition => { // (definition, id) -> id is available but not necessary
+  //     const definitionID = taxonomyDefinitionStore.getKey(write)(definition) // matchType(write)(value.type)
+  //     return `<${definitionID}>`
+  //   }
+  // })
   const recordStore = createStore({
     SymbolType: RecordSymbol,
-    handler (value, index) {
-      value.meta = {
-        id: index.toString(),
-        ...value.meta
+    handler ({ type, id, data, meta, from, publish = false, archived = false }) {
+      if (!id) {
+        id = generateUUID()
       }
-      return value
+      const document = { id, type }
+      const revision = generateUUID()
+      return {
+        document,
+        revision: {
+          id: revision,
+          from,
+          published: publish ? revision : null,
+        },
+        meta,
+        data,
+        archived
+      }
     },
-    serializer: write => value => {
-      const data = matchType(write)(value.data)
-      const meta = matchType(write)(value.meta)
-      // console.log({ data, meta })
-      // console.log({ data: data.toString(), meta: meta.toString() })
-      // const [ data, meta ] = serializeObject(value).map(matchType(write))
-      return `(${data}${meta})`
+    serializer: write => ({ document, revision, data, meta, archived }) => {
+      const documentKey = documentStore.getKey(write)(document)
+      const revisionKey = objectStore.getKey(write)(revision)
+      const dataKey = objectStore.getKey(write)(data)
+      const metaKey = objectStore.getKey(write)(meta)
+      const archivedValue = matchType(write)(archived)
+      return `(${documentKey}${revisionKey}${dataKey}${metaKey}${archivedValue})`
     }
   })
+  // const recordStore = createStore({
+  //   SymbolType: RecordSymbol,
+  //   handler (value) {
+  //     value.meta = {
+  //       id: index.toString(),
+  //       ...value.meta
+  //     }
+  //     return value
+  //   },
+  //   serializer: write => value => {
+  //     const data = matchType(write)(value.data)
+  //     const meta = matchType(write)(value.meta)
+  //     // console.log({ data, meta })
+  //     // console.log({ data: data.toString(), meta: meta.toString() })
+  //     // const [ data, meta ] = serializeObject(value).map(matchType(write))
+  //     return `(${data}${meta})`
+  //   }
+  // })
 
-  const taxonomyDefinitionStore = createStore({
-    SymbolType: TaxonomySymbol,
-    serializer: write => value => {
-      // <S1>,<S2>,<S3> for now - no definition data!!!
-      const type = stringStore.getKey(write)(value.type) // matchType(write)(value.type)
-      return `<${type}>`
-    }
-  })
+  // const taxonomyStore = createStore({
+  //   SymbolType: TaxonomySymbol,
+  //   serializer: write => value => {
+  //     // <S1>,<S2>,<S3> for now - no definition data!!!
+  //     const type = stringStore.getKey(write)(value.type) // matchType(write)(value.type)
+  //     return `<${type}>`
+  //   }
+  // })
 
-  const documentStore = createStore({
-    match: false,
-    SymbolType: TaxonomySymbol,
-    handler (type, id) {
-      return { id, type }
-    },
-    // <D1>,<D2>,<D3> for now - D1 is link to TaxonomyDefinition, the ID is derived from order (like in everything else!!!!!)
-    serializer: write => definition => { // (definition, id) -> id is available but not necessary
-      const definitionID = taxonomyDefinitionStore.getKey(write)(definition) // matchType(write)(value.type)
-      return `<${definitionID}>`
-    }
-  })
-
-  const publicationStore = createStore({
-    match: false,
-    SymbolType: PublicationSymbol,
-    serializer: write => ({ taxonomy_id, record }) => {
-      // taxonomy is and ID which is already predefined
-      return `<X${taxonomy_id}${recordStore.getKey(write)(record)}>`
-    }
-  })
-
+  // const publicationStore = createStore({
+  //   match: false,
+  //   SymbolType: PublicationSymbol,
+  //   serializer: write => ({ taxonomy_id, record }) => {
+  //     // taxonomy is and ID which is already predefined
+  //     return `<X${taxonomy_id}${recordStore.getKey(write)(record)}>`
+  //   }
+  // })
+  //
   const allStores = {
     // identifierStore,
     stringStore,
     arrayStore,
     objectStore,
     recordStore,
-    taxonomyDefinitionStore,
-    documentStore,
-    publicationStore
+    documentStore
+    // taxonomyDefinitionStore,
+    // publicationStore
   }
 
   const getBasicTokenValue = (token) => {
@@ -158,10 +199,6 @@ export const initDocument = () => {
           return getIntegerSymbol(token)
       case "number":
         return getNumberSymbol(token)
-      // case "identifier":
-      //   const key = identifierStore.getKey(write)(JSON.parse(token))
-      //   // identifierStore.getValue(key)
-      //   return token
       case "string":
         const key = stringStore.getKey(write)(JSON.parse(token))
         // stringStore.getValue(key)
@@ -182,28 +219,32 @@ export const initDocument = () => {
         return value
       }
       case "record": {
-        const [ data, meta ] = matches.map(parseToken)
-        const value = { data, meta }
+        const [ document, revision, data, meta, archived ] = matches.map(parseToken)
+        const value = { document, revision, data, meta, archived }
         recordStore.getKey(write)(value)
         return value
       }
-      case "taxonomyDefinition": {
-        const [ type ] = matches.map(parseToken)
-        taxonomyDefinitionStore.getKey(write)({ type })
-        return value
-      }
       case "document": {
-        const [ type ] = matches.map(parseToken)
-        const value = createDocument(type) // TODO: createDocument - should return { id: 2, type: 'page'}
+        const [ id, type ] = matches.map(parseToken)
+        const value = { id, type }
         documentStore.getKey(write)(value)
         return value
       }
-      case "publication": {
-        const [ id, record ] = matches.map(parseToken)
-        const value = updateTaxonomyDefinition(idRecord)
-        publicationStore.getKey(write)(value)
-        return value
-      }
+      // case "identifier":
+      //   const key = identifierStore.getKey(write)(JSON.parse(token))
+      //   // identifierStore.getValue(key)
+      //   return token
+      // case "taxonomyDefinition": {
+      //   const [ type ] = matches.map(parseToken)
+      //   taxonomyDefinitionStore.getKey(write)({ type })
+      //   return value
+      // }
+      // case "publication": {
+      //   const [ id, record ] = matches.map(parseToken)
+      //   const value = updateTaxonomyDefinition(idRecord)
+      //   publicationStore.getKey(write)(value)
+      //   return value
+      // }
     }
   }
 
@@ -220,8 +261,10 @@ export const initDocument = () => {
         return getBasicTokenValue(token)
       case "N":
         return decodeFloat(token.substring(1))
-      case "I":
+      case "+":
         return decodeInt(token.substring(1))
+      case "-":
+        return -1n * decodeInt(token.substring(1))
       case "S":
         return stringStore.getValue(token)
       case "A":
@@ -230,10 +273,8 @@ export const initDocument = () => {
         return objectStore.getValue(token)
       case "R":
         return recordStore.getValue(token)
-      case "X":
-        return documentStore.getValue(token)
       case "D":
-        return taxonomyDefinitionStore.getValue(token)
+        return documentStore.getValue(token)
     }
   }
 
@@ -267,7 +308,7 @@ export const initDocument = () => {
       // belongsToMany () {},
       create () {},
       update () {},
-      delete () {}
+      archive () {}
     }
   }
 

@@ -43,7 +43,6 @@ const getStoreInstance = (key) => stores.get(key)
 //   save (data, prev) {
 //     const output = []
 //     const meta = { author: "Dane Brdarski", timestamp: Date.now() }
-//     // TODO: addRecord in next line needs to be replaced with addTaxonomy or something
 //     const result = getStoreInstance(this).addRecord(write(output))({ data, meta, prev })
 //     console.log({ id: result })
 //     return adapter.write(this.filename, output.join(""))
@@ -69,13 +68,18 @@ export const repository = adapter => {
         console.error(e)
       }
     }
-    save (data, prev) {
+    save ({ type, id, data, publish = false, from }) {
       const output = []
-      const meta = { author: "Dane Brdarski", timestamp: Date.now() }
-      // TODO: addRecord in next line needs to be replaced with addTaxonomy or something
-      const result = getStoreInstance(this).addRecord(write(output))({ data, meta, prev })
+      const meta = { user: "Dane Brdarski", timestamp: Date.now() }
+      const result = getStoreInstance(this)
+        .addRecord(
+          write(output)
+        )({ type, id, data, meta, publish, from })
       console.log({ id: result })
-      return adapter.write(this.filename, output.join(""))
+      return adapter.write(
+        this.filename,
+        output.join("")
+      )
     }
   }
   return {
@@ -86,7 +90,7 @@ export const repository = adapter => {
       await instance.load()
       return instance
     },
-     open: async(file) => {
+    open: async(file) => {
       const instance = new Database(file)
       await instance.load()
       return instance
