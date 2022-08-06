@@ -6,7 +6,7 @@ export const initIds = () => {
     ids[type] = {
       createDocument (id) {
         // console.log("CREATE DOC", id, type)
-        documents[id] = {
+        documents[id] = documents[id] || {
           records: {
             revisions: {},
             publications: {},
