@@ -1,9 +1,11 @@
 export const initIds = () => {
   const ids = {}
+  const getters = {}
   const generateType = type => {
     const documents = {}
     ids[type] = {
       createDocument (id) {
+        // console.log("CREATE DOC", id, type)
         documents[id] = {
           records: {
             revisions: {},
@@ -15,6 +17,7 @@ export const initIds = () => {
         }
       },
       createRecord (id, record) {
+        // console.log("CREATE RECORD", id, record)
         const document = documents[id]
         document.records.revisions[record.revision.id] = record
         document.active = record.revision.published = record.revision.published || document.active
@@ -22,6 +25,12 @@ export const initIds = () => {
           document.records.publications[record.revision.id] = record
         }
         document.archived = record.archived
+      }
+    }
+    getters[type] = {
+      getDocuments (id) {
+        console.log(documents)
+        return Object.keys(documents)
       },
       getActiveRevision (id) {
         const { active, records } = documents[id]
@@ -37,5 +46,5 @@ export const initIds = () => {
       }
     }
   }
-  return { ids, generateType }
+  return { ids, getters, generateType }
 }

@@ -173,7 +173,7 @@ export const initDocument = (init) => {
   }
 
   const addRecord = write => value => recordStore.getKey(write)(value)
-  const { ids, generateType } = initIds(init)
+  const { ids, getters, generateType } = initIds(init)
   init(generateType)
 
   // const taxonomy = (name, schema, relations) => {}
@@ -208,6 +208,7 @@ export const initDocument = (init) => {
     allStores,
     matchToken,
     matchType,
-    addRecord
+    addRecord,
+    getters
   }
 }

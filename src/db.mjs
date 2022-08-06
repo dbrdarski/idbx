@@ -38,6 +38,9 @@ export const repository = adapter => init => {
         output.join("")
       )
     }
+    query (fn) {
+      return fn(getStoreInstance(this).getters)
+    }
   }
   return {
     create: async (file) => {
