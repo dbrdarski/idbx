@@ -21,12 +21,12 @@ export const tokenizer = parsers => str => {
       }
     }
     if (cursor) {
-      throw new Error(`Unknown token: "${ str.substr(0, cursor) }"`)
+      throw new Error(`Unknown token: "${ str.substring(0, cursor) }"`)
     } else if (token) {
       // push current token onto sequence
       tokens.push(token)
     }
-    str = str.substr(cursor + (token ? token.token.length : 0))
+    str = str.substring(cursor + (token ? token.token.length : 0))
   }
   return tokens
 }
