@@ -8,60 +8,18 @@ export const write = (output = []) => (value) => output.push(value)
 const stores = new WeakMap
 const getStoreInstance = (key) => stores.get(key)
 
-// class Database {
-//   #adapter
-//   constructor (adapter, file) {
-//     Object.defineProperty(this, "filename", { value: file })
-//     this.data = null
-//   }
-//   static async create (file) {
-//     const instance = new this(file)
-//     adapter.create(instance.filename)
-//     console.log(`CREATED ${instance.filename}`)
-//     await instance.load()
-//     return instance
-//   }
-//   static async open (file) {
-//     const instance = new this(file)
-//     await instance.load()
-//     return instance
-//   }
-//   async load () {
-//     // const { matchType, matchToken, allStores } = initDocument()
-//     stores.set(this, initDocument())
-//     const data = await adapter.open(this.filename)
-//     try {
-//       const pData = tokenize(data.toString())
-//       const result = pData.reduce(mapToReduce(getStoreInstance(this).matchToken(noop)), null)
-//       // console.log(result)
-//       // const result = JSON.stringify(pData.map(matchToken(write)), 2, 3)
-//       this.data = result
-//     } catch (e) {
-//       console.error(e)
-//     }
-//   }
-//   save (data, prev) {
-//     const output = []
-//     const meta = { author: "Dane Brdarski", timestamp: Date.now() }
-//     const result = getStoreInstance(this).addRecord(write(output))({ data, meta, prev })
-//     console.log({ id: result })
-//     return adapter.write(this.filename, output.join(""))
-//   }
-// }
-
-export const repository = adapter => {
+export const repository = adapter => init => {
   class Database {
     constructor (file) {
       Object.defineProperty(this, "filename", { value: file })
       this.data = null
     }
     async load () {
-      stores.set(this, initDocument())
+      stores.set(this, initDocument(init))
       const data = await adapter.open(this.filename)
       try {
         const pData = tokenize(data.toString())
         const result = pData.reduce(mapToReduce(getStoreInstance(this).matchToken(noop)), null)
-        // console.log(result)
         // const result = JSON.stringify(pData.map(matchToken(write)), 2, 3)
         this.data = result
       } catch (e) {
@@ -75,7 +33,6 @@ export const repository = adapter => {
         .addRecord(
           write(output)
         )({ type, id, data, meta, publish, from })
-      console.log({ id: result })
       return adapter.write(
         this.filename,
         output.join("")

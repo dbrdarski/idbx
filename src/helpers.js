@@ -1,3 +1,5 @@
+import { noop } from "./utils"
+
 export const createStore = ({ SymbolType, serializer, handler, match }) => store(SymbolType, serializer, handler, match)
 
 // inheritFromStore may be removed
@@ -12,7 +14,7 @@ const store = (SymbolType, serializer, handler, match = true, inheritFromStore =
     fork: () => store(SymbolType, serializer, handler, match, inheritFromStore = { keys, values }),
     getValue: key => values[key],
     getKey: write => value => {
-      value = handler ? handler(value) : value
+      value = (handler && write !== noop) ? handler(value) : value
       const str_value = serializer
         ? serializer(write)(value, match ? undefined : counter++)
         : value
