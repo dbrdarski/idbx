@@ -28,12 +28,10 @@ const intSerializer = (radix, offset) => [
   int => {
     int = BigInt(int)
     let rem = 0n
-    // let output = []
     let str = ""
     do {
       [ int, rem ] = divrem(int, radix)
       str += String.fromCharCode(Number(rem + offset))
-      // output.push(rem)
     } while (int !== 0n)
     return str
   },
@@ -54,7 +52,6 @@ const hashSerializer = (radix) => [
     while (int !== 0n) {
       [ int, rem ] = divrem(int, radix)
       str += Number(rem).toString(Number(radix))
-      // output.push(rem)
     }
     return str
   },
