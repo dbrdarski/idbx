@@ -8,7 +8,7 @@ const stores = new WeakMap
 const getStoreInstance = (key) => stores.get(key)
 
 export const repository = adapter => init => {
-  class Database {
+  class ContentRepository {
     constructor (file) {
       Object.defineProperty(this, "filename", { value: file })
       this.data = null
@@ -48,14 +48,14 @@ export const repository = adapter => init => {
   }
   return {
     create: async (file) => {
-      const instance = new Database(file)
+      const instance = new ContentRepository(file)
       adapter.create(instance.filename)
       console.log(`CREATED ${instance.filename}`)
       await instance.load()
       return instance
     },
     open: async(file) => {
-      const instance = new Database(file)
+      const instance = new ContentRepository(file)
       await instance.load()
       return instance
     }

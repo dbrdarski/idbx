@@ -28,7 +28,7 @@ export const initIds = () => {
       }
     }
     getters[type] = {
-      getDocuments (id, active = true) {
+      getDocuments (active = true) {
         return Object.keys(documents)
           .filter(id => documents[id].archived !== active)
       },
