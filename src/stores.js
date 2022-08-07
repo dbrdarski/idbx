@@ -113,14 +113,12 @@ export const initDocument = (init) => {
       case "record": {
         const [ document, revision, data, meta, archived ] = matches.map(parseToken)
         const record = { document, revision, data, meta, archived }
-        // ids[document.type].createRecord(document.id, record)
         recordStore.getKey(write)(record)
         return record
       }
       case "document": {
         const [ id, type ] = matches.map(parseToken)
         const document = { id, type }
-        // ids[type].createDocument(id)
         documentStore.getKey(write)(document)
         return document
       }

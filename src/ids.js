@@ -28,9 +28,9 @@ export const initIds = () => {
       }
     }
     getters[type] = {
-      getDocuments (id) {
-        console.log(documents)
+      getDocuments (id, active = true) {
         return Object.keys(documents)
+          .filter(id => documents[id].archived !== active)
       },
       getActiveRevision (id) {
         const { active, records } = documents[id]
@@ -43,6 +43,7 @@ export const initIds = () => {
       getRevisions (id) {
         const { records } = documents[id]
         return Object.keys(records.revisions)
+          .filter(id => records.revisions[id].archived === false)
       }
     }
   }
