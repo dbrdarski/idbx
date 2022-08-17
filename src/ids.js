@@ -1,49 +1,75 @@
+import query from './iterable'
+
 export const initIds = () => {
   const ids = {}
   const getters = {}
   const generateType = type => {
-    const documents = {}
+    const documents = {
+      byId: {},
+      ids: []
+    }
+    const records = {
+      byId: {},
+      revisions: [],
+      publications: []
+    }
     ids[type] = {
       createDocument (id) {
         // console.log("CREATE DOC", id, type)
-        documents[id] = documents[id] || {
-          records: {
-            revisions: {},
-            publications: {},
-          },
-          active: null,
-          // latest: null,
-          archived: false
+        if (!documents.byId.hasOwnProperty(id)) {
+          documents.ids.push(id)
+          documents.byId[id] = {
+            records: {
+              revisions: [],
+              publications: [],
+            },
+            active: null,
+            // latest: null,
+            archived: false
+          }
         }
       },
-      createRecord (id, record) {
+      createRecord (documentId, record) {
         // console.log("CREATE RECORD", id, record)
-        const document = documents[id]
-        document.records.revisions[record.revision.id] = record
-        document.active = record.revision.published = record.revision.published || document.active
+        const { id } = record.revision
+        const document = documents.byId[documentId]
+        document.records.revisions.push(id)
+        records.revisions.push(id)
+        records.byId[id] = record
         if (record.revision.published) {
-          document.records.publications[record.revision.id] = record
+          records.publications.push(id)
+          document.records.publications.push(id)
         }
+        document.active = record.revision.published = record.revision.published || document.active
         document.archived = record.archived
       }
     }
     getters[type] = {
-      getDocuments (active = true) {
-        return Object.keys(documents)
-          .filter(id => documents[id].archived !== active)
+      getDocuments () {
+        return query(
+          documents.byId,
+          documents.ids
+        )
       },
-      getActiveRevision (id) {
-        const { active, records } = documents[id]
-        return active && records.revisions[active]
+      getActiveRevision (documentId) {
+        const { active } = documents.byId[documentId]
+        return active && records.byId[active]
       },
-      getPublications (id) {
-        const { records } = documents[id]
-        return Object.keys(records.publications)
+      getPublications (documentId) {
+        return query(
+          records.byId,
+          documentId == null
+            ? records.publications
+            : documents.byId[documentId].records.publications
+        )
       },
-      getRevisions (id) {
-        const { records } = documents[id]
-        return Object.keys(records.revisions)
-          .filter(id => records.revisions[id].archived === false)
+      getRevisions (documentId) {
+        return query(
+          records.byId,
+          documentId == null
+            ? records.revisions
+            : documents.byId[documentId].records.revisions
+        )
       }
     }
   }
