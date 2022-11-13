@@ -69,11 +69,11 @@ export const [ encodeHashString, decodeHashString ] = intSerializer(2n ** 16n)
 export const [ encodeHash, decodeHash ] = hashSerializer(16n)
 
 export function floatToIntArray (f) {
-  return new Uint32Array(Float64Array.of(f).buffer);
+  return new Uint32Array(Float64Array.of(f).buffer)
 }
 
 export function intArrayToFloat (is) {
-  return (new Float64Array(Uint32Array.from(is).buffer))[0];
+  return (new Float64Array(Uint32Array.from(is).buffer))[0]
 }
 
 export const encodeFloat = n => encodeInt(floatToIntArray(n).reverse().reduce((acc, v, i) => acc + BigInt(v) * radix32bits ** BigInt(i), 0n))
@@ -93,11 +93,34 @@ export function getVNodeTree (el) {
 }
 
 function getVNode (el) {
-    const tag = el.tagName.toLowerCase();
-    const attrs = {};
-    for (attr of el.getAttributeNames()) {
+    const tag = el.tagName.toLowerCase()
+    const attrs = {}
+    for (const attr of el.getAttributeNames()) {
         attrs[attr] = el.getAttributeNode(attr).value
     }
     const children = Array.from(el.childNodes).map(getVNodeTree).filter(x => x != null)
     return { tag, attrs, children }
+}
+
+export function createElement ({ tag, attrs, children }) {
+  const el = document.createElement(tag)
+  if (attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
+      el.setAttribute(k, v)
+    }
+  }
+  // if (children) {
+  for (const child of children) {
+    render(el, child)
+  }
+  // }
+  return el
+}
+
+export function render (parent, vdom) {
+  const el = typeof vdom === 'string'
+    ? document.createTextNode(vdom)
+    : createElement(vdom)
+  parent && parent.appendChild(el)
+  return el
 }

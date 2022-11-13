@@ -171,6 +171,7 @@ export const initDocument = (init) => {
   }
 
   const addRecord = write => value => recordStore.getKey(write)(value)
+  const getRecord = recordStore.getValue
   const { ids, getters, generateType } = initIds(init)
   init(generateType)
 
@@ -207,6 +208,7 @@ export const initDocument = (init) => {
     matchToken,
     matchType,
     addRecord,
+    getRecord,
     getters
   }
 }

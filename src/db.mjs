@@ -30,17 +30,23 @@ export const repository = adapter => init => {
         console.error(e)
       }
     }
-    save ({ type, id, data, publish = false, from }) {
+    save ({ type, id, data, publish = false, from, relationships }) {
       const output = []
-      const meta = { user: "Dane Brdarski", timestamp: Date.now() }
-      const result = getStoreInstance(this)
+      const meta = {
+        user: "Dane Brdarski",
+        timestamp: Date.now()
+      }
+      const records = getStoreInstance(this)
+      const result = records
         .addRecord(
           write(output)
-        )({ type, id, data, meta, publish, from })
-      return adapter.write(
+        )({ type, id, data, meta, publish, from, relationships })
+      adapter.write(
         this.filename,
         output.join("")
       )
+      return records.getRecord(result).document.id
+
     }
     query (fn) {
       return fn(getStoreInstance(this).getters)

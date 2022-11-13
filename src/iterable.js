@@ -135,137 +135,27 @@ const limit = (next, limit) => {
   }
 }
 
-// class LazyIterable {
-//   #map (fn) {
-//     return new MappedQuery(this, fn)
-//   }
-//   #reduce (fn, ...maybeInitial) {
-//     const iterator = this[Symbol.iterator]()
-//     let acc, item
-//     if (maybeInitial.length) {
-//       acc = maybeInitial[0]
-//     } else {
-//       item = iterator.next()
-//       if (item.done) {
-//         throw TypeError('Reduce of empty collection with no initial value')
-//       }
-//       acc = item.value
-//     }
-//     do {
-//       item = iterator.next()
-//       if (item.done) {
-//         return acc
-//       }
-//       acc = fn(acc, item.value)
-//     } while (true)
-//   }
-//   find (fn) {
-//     return new FindQuery(this, fn)
-//   }
-//   limit (limit) {
-//     return limit ? new QueryLimit(this, limit) : this
-//   }
-//   skip (skip) {
-//     return skip ? new QuerySkip(this, skip) : this
-//   }
-//   data (fn) {
-//     return [...(fn ? this.#map(fn) : this)]
-//   }
-//   ids () {
-//     return [...this.#map(getDocumentId)]
-//   }
-//   count () {
-//     return this.#reduce(add, 0)
-//   }
-// }
-//
-// class Query extends LazyIterable {
-//   constructor (records) {
-//     this.records = records
-//   }
-//   *[Symbol.iterator] () {
-//     for (const value of this.records.ids) {
-//       yield this.handler(this.records.byId(value))
-//     }
-//   }
-// }
-//
-// class MappedQuery extends LazyIterable {
-//   constructor (iterable, handler) {
-//     super()
-//     this.iterable = iterable
-//     this.handler = handler
-//   }
-//   *[Symbol.iterator] () {
-//     for (const value of this.iterable) {
-//       yield this.handler(value)
-//     }
-//   }
-// }
-//
-// class FindQuery extends LazyIterable {
-//   constructor (iterable, handler) {
-//     super()
-//     this.iterable = iterable
-//     this.handler = handler
-//   }
-//   *[Symbol.iterator] () {
-//     for (const value of this.iterable) {
-//       const result = this.handler(value)
-//       if (result) {
-//         yield value
-//       }
-//     }
-//   }
-// }
-//
-// class QueryLimit extends LazyIterable {
-//   constructor (iterable, limit) {
-//     super()
-//     this.iterable = iterable
-//     this.limit = limit
-//   }
-//   *[Symbol.iterator] () {
-//     let i = 0
-//     const iterator = this.iterable[Symbol.iterator]()
-//     while (i++ < this.limit) {
-//       yield iterator.next().value
-//     }
-//   }
-// }
-//
-// class QuerySkip extends LazyIterable {
-//   constructor (iterable, skip) {
-//     super()
-//     this.iterable = iterable
-//     this.skip = skip
-//   }
-//   *[Symbol.iterator] () {
-//     let i = 0
-//     for (const value of this.iterable) {
-//       if (i++ >= this.skip) {
-//         yield value
-//       }
-//     }
-//   }
-// }
+// const a = effect(Array.from({ length: 100000 }, (x, i) => x => { console.log(i); return x(); } ))
+// consumeEffect(a)
 
 // const copyPost = post => new Post(post)
 // const getPostById = id => Post.byId(id)
 //
-//   searchByTitle (title, offset, limit) {
-//     return Post
-//       .revisions()
-//       .find(post => post.data.title.includes(title))
-//       .skip(offset)
-//       .limit(offset)
-//       .data(post => post.data.head)
-//       .include([ Tag, Category ])
-//   }
+// const searchByTitle = (title, offset, limit) => {
+//   return Post
+//     .revisions()
+//     .find(post => post.data.title.includes(title))
+//     .skip(offset)
+//     .limit(offset)
+//     .data(post => post.data.head)
+//     .include([ Tag, Category ])
+// }
 //
-// const searchByTitle = (title, offset, limit) => Post
-//   .revisions()
-//   .find(post => post.data.title.includes(title))
-//   .skip(offset)
-//   .limit(offset)
-//   .data(post => post.data.head)
+// const createPost = p =>
+//   Post(p).save()
+//
+// const addTag = (post, ...tagIds) =>
+//   post.attach(Tag, ...tagIds)
+//
+// const addPostTaxonomy = (taxonomy, ids) =>
+//   post.attach(taxonomy, ...ids)
