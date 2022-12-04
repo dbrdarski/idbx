@@ -124,3 +124,46 @@ export function render (parent, vdom) {
   parent && parent.appendChild(el)
   return el
 }
+
+// export const once = fn => {
+//   let done = false
+//   let value
+//   return () => {
+//     if (!done) {
+//       value = fn()
+//       done = true
+//     }
+//     return value
+//   }
+// }
+//
+// export const lazy = (fn, ...opts) => {
+//   let done = false
+//   let value
+//   return () => {
+//     if (!done) {
+//       value = fn(...opts)
+//       done = true
+//     }
+//     return value
+//   }
+// }
+//
+// export const holder = () => {
+//   const memo = []
+//   return (...values) => {
+//     if (!values.length) {
+//       values = [...memo]
+//       memo.length = 0
+//       return values
+//     }
+//     memo.push(...values)
+//   }
+// }
+
+export const isClass = v => typeof v === 'function' && /^\s*class\s+/.test(v.toString())
+
+// export const throwableOnce = (msg, fn, done = false) => v => {
+//   if (done) throw Error(msg)
+//   fn(v)
+// }

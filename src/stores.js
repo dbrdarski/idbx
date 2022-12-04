@@ -2,12 +2,13 @@ import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, R
 import { createStore, serializeObject, deserializeObject, generateUUID } from "./helpers.js"
 import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
-import { initIds } from "./ids"
+import { initModels } from "./models"
+import { $, schema } from "./schema"
 
 const getNumberSymbol = (v) => NumberSymbol.fromNumeric(v)
 const getIntegerSymbol = (v) => `${v < 0 ? '-' : '+'}${IntegerSymbol.fromBigInt(v < 0 ? -1n * v : v)}`
 
-export const initDocument = (init) => {
+export const initDocument = (instance, init) => {
   const stringStore = createStore({
     SymbolType: StringSymbol,
     serializer: _ => JSON.stringify
@@ -31,7 +32,7 @@ export const initDocument = (init) => {
     serializer: write => ({ id, type }) => {
       const idKey = stringStore.getKey(write)(id)
       const typeKey = stringStore.getKey(write)(type)
-      ids[type].createDocument(id)
+      store[type].createDocument(id)
       return `<${idKey}${typeKey}>`
     }
   })
@@ -44,6 +45,9 @@ export const initDocument = (init) => {
       }
       const document = { id, type }
       const revision = generateUUID()
+      store[type].selectModel(id, revision, publish, archived)
+      const validation = store[type].validate(data)
+      store[type].releaseModel()
       return {
         document,
         revision: {
@@ -59,7 +63,7 @@ export const initDocument = (init) => {
     serializer: write => (record) => {
       const { document, revision, data, meta, archived } = record
       const documentKey = documentStore.getKey(write)(document)
-      ids[document.type].createRecord(document.id, record)
+      store[document.type].createRecord(document.id, record)
 
       const revisionKey = objectStore.getKey(write)(revision)
       const dataKey = objectStore.getKey(write)(data)
@@ -172,8 +176,13 @@ export const initDocument = (init) => {
 
   const addRecord = write => value => recordStore.getKey(write)(value)
   const getRecord = recordStore.getValue
-  const { ids, getters, generateType } = initIds(init)
-  init(generateType)
+  const { store, methods, generateModels } = initModels()
+  // const { setters, generateSetters } = initSetters()
+  const def = init({ $, schema, UUID: x => x })
+
+  for (const name in def) {
+    generateModels(instance, name, def[name], def)
+  }
 
   // const taxonomy = (name, schema, relations) => {}
 
@@ -209,6 +218,6 @@ export const initDocument = (init) => {
     matchType,
     addRecord,
     getRecord,
-    getters
+    methods
   }
 }

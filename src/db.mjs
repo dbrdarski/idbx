@@ -14,7 +14,7 @@ export const repository = adapter => init => {
       this.data = null
     }
     async load () {
-      stores.set(this, initDocument(init))
+      stores.set(this, initDocument(this, init))
       const data = await adapter.open(this.filename)
       try {
         const pData = tokenize(data.toString())
@@ -31,6 +31,7 @@ export const repository = adapter => init => {
       }
     }
     save ({ type, id, data, publish = false, from, relationships }) {
+      console.log("SAVING", { type, id, data, publish, from, relationships })
       const output = []
       const meta = {
         user: "Dane Brdarski",
@@ -49,7 +50,7 @@ export const repository = adapter => init => {
 
     }
     query (fn) {
-      return fn(getStoreInstance(this).getters)
+      return fn(getStoreInstance(this).methods)
     }
   }
   return {

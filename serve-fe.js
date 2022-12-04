@@ -21,81 +21,76 @@ const renderer = target => [
 !(async () => {
   // const db = await db.open('pero')
   // window.db = db
-  const schema = (define, { schema, ...$ } = {}) => {
-    define('doc')
-    define('post')
+  const schema = ({ $, schema, UUID }) => {
+    // define('doc')
+    // define('post')
+
+    class TaxonomyHead {
+      title = String
+      slug = String
+    }
+
+    class Vdom {
+      tag = String
+      attrs = Object
+      children = Array(window.$or(Vdom, String))
+    }
+
     return {
       user () {
-        return schema({
-          name: $.String,
-          email: $.String
-        })
+        return class User {
+          name = String
+          email = String
+        }
       },
       post ({ tag, category }) {
-        this.belongsToMany({
-          tag,
-          category
-        })
-        const Vdom = schema({
-          tag: $(String, {
-            default: ""
-          }),
-          attrs: $(Object),
-          children: $(Array.of(Vdom))
-        })
-        return schema({
-          header: schema({
-            title: $(String),
-            slug: $(String)
-          }),
-          body: Vdom
-        })
+        const Tag = this.belongsToMany({ tag })
+        const Category = this.belongsToMany({ category })
+        class Taxonomies {
+          tags = Array(Tag)
+          categories = Array(Category)
+        }
+        return class Post {
+          header = TaxonomyHead
+          body = Vdom
+          taxonomies = Taxonomies
+        }
       },
       page () {
-        const Vdom = schema({
-          tag: $.String,
-          attrs: $. Object,
-          children: $.Array.of(Vdom)
-        })
-        return schema({
-          header: schema({
-            title: $.String
-          }),
-          body: Vdom
-        })
+        return class Page {
+          header = TaxonomyHead
+          body = Vdom
+        }
       },
       category ({ post }) {
         this.publish = true
-        this.hasMany(post)
-        return schema({
-          title: $.String,
-          slug: $.String
+        this.hasMany({
+          post
         })
+        return TaxonomyHead
       },
       tag ({ post }) {
         this.publish = true
-        this.hasMany(post)
-        return schema({
-          title: $.String,
-          slug: $.String({
-            default: kebabCase
-          })
+        this.hasMany({
+          post
         })
+        return TaxonomyHead
       },
       pageTree ({ page }) {
-        const Route = schema({
-          page_id: $.UUID.of(page),
-          path: $.String,
-          children: $.Array.of(Route)
-        })
-        return Route
+        const Page = this.belongsToMany({ page })
+        return class Route {
+          page_id = Page
+          path = String
+          children = Array(Route)
+        }
       }
     }
   }
 
   const db = repository(browser)
   const repo = db(schema)
-  const r = await repo[localStorage.hasOwnProperty("Pero") ? "open" : "create"]("Pero")
+  // const r = await repo[localStorage.hasOwnProperty("Pero") ? "open" : "create"]("Pero")
+  const r = await repo[localStorage.hasOwnProperty("Blazo") ? "open" : "create"]("Blazo")
 
   cezare_borgia_JSON.tag = "div"
   cezare_borgia_JSON.attrs.contenteditable = true
