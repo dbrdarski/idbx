@@ -13,15 +13,17 @@ const documentId = Symbol('documentId')
 const revisionId = Symbol('revisionId')
 const rel = Symbol('rel')
 
+window.relationships = {}
+
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
 
   const storeHelpers = store[type]
 
-  const foreignKeys = {}
-  const ownKeys = {}
-  const revisions = ownKeys.revisions = {}
-  // documents aka active
-  const documents = ownKeys.documents = {}
+  const relationships = window.relationships[type] = {}
+  const activeDocuments = relationships.activeDocuments = {}
+  const documentsByRevision = relationships.documentsByRevision = {}
+  const revisionsByDocument = relationships.revisionsByDocument = {}
+  // activeDocuments aka active
 
   // let initializedModel = null
   let validatedModel = null
@@ -37,6 +39,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 
   const updateRelatedModel = ($, current, next, { add, remove }) => {
     const id = $[documentId]
+    const revId = $[revisionId]
     if (next instanceof Set) {
       if (current == null) {
         add(id, ...next)
@@ -60,23 +63,30 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       // remove
       return
     }
+    const foreignKeyMatch = validatedModel[name]
     if (validatedModel[isPublished]) {
-      document = documents[validatedModel[documentId]] = documents[validatedModel[documentId]] ?? {}
-      document[name] = validatedModel.hasOwnProperty(name)
-        ? updateRelatedModel(validatedModel, document[name], value, validatedModel[name])
+      const document = activeDocuments[validatedModel[documentId]] = activeDocuments[validatedModel[documentId]] ?? {}
+      document[name] = foreignKeyMatch
+        ? updateRelatedModel(validatedModel, document[name], value, foreignKeyMatch)
         : value
     }
-    const revision = revisions[validatedModel[revisionId]] = revisions[validatedModel[revisionId]] ?? {}
+    const revision = documentsByRevision[validatedModel[revisionId]] = documentsByRevision[validatedModel[revisionId]] ?? {}
     revision[name] = value
+    if (foreignKeyMatch) {
+      value instanceof Set
+        ? foreignKeyMatch.update(validatedModel[revisionId], ...value)
+        : foreignKeyMatch.update(validatedModel[revisionId], value)
+
+    }
   }
 
   storeHelpers.selectModel = (docId, revId, active, archived = false) => {
     validatedModel = Object.create(validatorPrototype, {
       [isPublished]: { value: active },
       [isArchived]: { value: archived },
-      [documentId]: { value: documentId },
-      [revisionId]: { value: revisionId },
-      [rel]: { value: {} }
+      [documentId]: { value: docId },
+      [revisionId]: { value: revId }
+      // [rel]: { value: {} }
     })
     initializer.forEach(apply(validatedModel))
   }
@@ -95,23 +105,33 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 
   const relationshipMethods = {
     hasOne (def, relationKey) {
+      if (relationKey == null) {
+        throw Error("Relation key is required on 'hasOne' relationships!")
+      }
       const [ name, model ] = Object.entries(def)[0]
       store[model.name].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
-            document = documents[id] = documents[id] || {}
+            const document = activeDocuments[id] = activeDocuments[id] || {}
             document[name] = documentId
           }
         },
         remove (documentId, ...ids) {
           for (const id of ids) {
-            // document = documents[id] = documents[id] || {}
+            // document = activeDocuments[id] = activeDocuments[id] || {}
             // document[name] = null
-            documents[id][name] = null
+            activeDocuments[id][name] = null
+          }
+        },
+        update (revisionId, ...ids) {
+          for (const id of ids) {
+            const document = revisionsByDocument[id] = revisionsByDocument[id] || {}
+            const set = document[name] = document[name] ?? new Set
+            set.add(revisionId)
           }
         },
         validate ($, id) {
-          const prev = documents[id]?.[name]
+          const prev = activeDocuments[id]?.[name]
           if (prev != null && prev !== $[documentId]) {
             throw Error(`Cannot assign multiple ${name}s to ${type}`)
           }
@@ -119,21 +139,31 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       })
     },
     hasMany (def, relationKey) {
+      if (relationKey == null) {
+        throw Error("Relation key is required on 'hasMany' relationships!")
+      }
       const [ name, model ] = Object.entries(def)[0]
       store[model.name].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
-            document = documents[id] = documents[id] || {}
-            const set = document[name] ?? new Set
-            set.add(document)
+            const document = activeDocuments[id] = activeDocuments[id] || {}
+            const set = document[name] = document[name] ?? new Set
+            set.add(documentId)
           }
         },
         remove (documentId, ...ids) {
           for (const id of ids) {
-            // document = documents[id] = documents[id] || {}
+            // document = activeDocuments[id] = activeDocuments[id] || {}
             // const set = document[name] ?? new Set
             // set.delete(documentId)
-            documents[id][name].delete(documentId)
+            activeDocuments[id][name].delete(documentId)
+          }
+        },
+        update (revisionId, ...ids) {
+          for (const id of ids) {
+            const document = revisionsByDocument[id] = revisionsByDocument[id] || {}
+            const set = document[name] = document[name] ?? new Set
+            set.add(revisionId)
           }
         }
       })
@@ -148,10 +178,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       return id => {
         const match = store[model.name].hasDocument(id)
         if (!match) {
-          console.log({ match })
           throw Error(`Id ${id} does not exist as a ${model.name}`)
         }
-        const prev = documents?.[validatedModel[documentId]]?.[name]
+        const prev = activeDocuments?.[validatedModel[documentId]]?.[name]
         if (prev != null && prev !== id) {
           throw Error(`Cannot assign multiple ${name}s to ${type}`)
         }

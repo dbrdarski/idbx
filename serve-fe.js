@@ -66,14 +66,14 @@ const renderer = target => [
         this.publish = true
         this.hasMany({
           post
-        })
+        }, "category")
         return TaxonomyHead
       },
       tag ({ post }) {
         this.publish = true
         this.hasMany({
           post
-        })
+        }, "tag")
         return TaxonomyHead
       },
       pageTree ({ page }) {
@@ -90,7 +90,7 @@ const renderer = target => [
   const db = repository(browser)
   const repo = db(schema)
   // const r = await repo[localStorage.hasOwnProperty("Pero") ? "open" : "create"]("Pero")
-  const r = await repo[localStorage.hasOwnProperty("Blazo") ? "open" : "create"]("Blazo")
+  const r = window.$ = await repo[localStorage.hasOwnProperty("Blazo") ? "open" : "create"]("Blazo")
 
   cezare_borgia_JSON.tag = "div"
   cezare_borgia_JSON.attrs.contenteditable = true

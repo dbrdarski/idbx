@@ -45,9 +45,6 @@ export const initDocument = (instance, init) => {
       }
       const document = { id, type }
       const revision = generateUUID()
-      store[type].selectModel(id, revision, publish, archived)
-      const validation = store[type].validate(data)
-      store[type].releaseModel()
       return {
         document,
         revision: {
@@ -57,11 +54,15 @@ export const initDocument = (instance, init) => {
         },
         meta,
         data,
-        archived
+        archived,
+        publish
       }
     },
     serializer: write => (record) => {
-      const { document, revision, data, meta, archived } = record
+      const { document, revision, data, meta, archived, publish } = record
+      // console.log({ revision })
+      store[document.type].selectModel(document.id, revision.id, publish, archived)
+      const validation = store[document.type].validate(data)
       const documentKey = documentStore.getKey(write)(document)
       store[document.type].createRecord(document.id, record)
 
@@ -69,6 +70,7 @@ export const initDocument = (instance, init) => {
       const dataKey = objectStore.getKey(write)(data)
       const metaKey = objectStore.getKey(write)(meta)
       const archivedValue = matchType(write)(archived)
+      store[document.type].releaseModel()
       return `(${documentKey}${revisionKey}${dataKey}${metaKey}${archivedValue})`
     }
   })
@@ -116,7 +118,8 @@ export const initDocument = (instance, init) => {
       }
       case "record": {
         const [ document, revision, data, meta, archived ] = matches.map(parseToken)
-        const record = { document, revision, data, meta, archived }
+        // console.log({ document, revision, data, meta, archived })
+        const record = { document, revision, data, meta, archived, publish: true }
         recordStore.getKey(write)(record)
         return record
       }

@@ -1,27 +1,33 @@
 const getDocumentId = r => r.document.id
 
 const add = (x, y) => x + y
+const inc = x => x + 1
 const key = (_, k) => k
 
 class Query {
   #data
-  constructor (data) {
+  #query
+  constructor (query, data) {
     this.#data = data
+    this.#query = query
   }
   skip (amount) {
     return amount
       ? new Query(
+        this.#query,
         skip(this.#data, amount)
       ) : this
   }
   limit (amount) {
     return amount
       ? new Query(
+        this.#query,
         limit(this.#data, amount)
       ) : this
   }
   find (fn) {
     return new Query(
+      this.#query,
       filter(this.#data, fn)
     )
   }
@@ -38,7 +44,14 @@ class Query {
       )
   }
   count () {
-    return reduce(this.#data, add, 0)
+    return reduce(this.#data, inc, 0)
+  }
+  include (...relationships) {
+    const inc = this.#query.include = this.#query.include ?? new Set
+    for (const rel of relationships) {
+      inc.add(rel)
+    }
+    return this
   }
 }
 
@@ -55,14 +68,17 @@ const array = (array) => {
 
 export default (data, ids) => {
   let i = 0
-  return new Query(fn => {
-    if (i < ids.length) {
-      const key = ids[i++]
-      fn(data[key], key, data)
-      return true
+  return new Query(
+    {},
+    fn => {
+      if (i < ids.length) {
+        const key = ids[i++]
+        fn(data[key], key, data)
+        return true
+      }
+      return false
     }
-    return false
-  })
+  )
 }
 
 const collect = (next, ...list) => {
