@@ -3,7 +3,6 @@ import { createStore, serializeObject, deserializeObject, generateUUID } from ".
 import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
 import { initModels } from "./models"
-import { $, schema } from "./schema"
 
 const getNumberSymbol = (v) => NumberSymbol.fromNumeric(v)
 const getIntegerSymbol = (v) => `${v < 0 ? '-' : '+'}${IntegerSymbol.fromBigInt(v < 0 ? -1n * v : v)}`
@@ -181,7 +180,7 @@ export const initDocument = (instance, init) => {
   const getRecord = recordStore.getValue
   const { store, methods, generateModels } = initModels()
   // const { setters, generateSetters } = initSetters()
-  const def = init({ $, schema, UUID: x => x })
+  const def = init()
 
   for (const name in def) {
     generateModels(instance, name, def[name], def)
