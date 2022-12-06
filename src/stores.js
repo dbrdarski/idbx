@@ -180,7 +180,7 @@ export const initDocument = (instance, init) => {
   const getRecord = recordStore.getValue
   const { store, methods, generateModels } = initModels()
   // const { setters, generateSetters } = initSetters()
-  const def = init()
+  const def = init({ UUID: x => x })
 
   for (const name in def) {
     generateModels(instance, name, def[name], def)

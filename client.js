@@ -21,7 +21,7 @@ const renderer = target => [
 !(async () => {
   // const db = await db.open('pero')
   // window.db = db
-  const schema = ({ $, schema, UUID }) => {
+  const schema = () => {
     // define('doc')
     // define('post')
 
