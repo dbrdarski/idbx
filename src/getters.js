@@ -56,7 +56,7 @@ export const generateGetters = (instance, store, methods, type) => {
     },
     activeRevisions () {
       return this.getDocuments()
-        .filter(item => item.active != null)
+        .find(item => item.active != null)
         .map(item => records.byId[item.active])
     },
     getActiveRevision (documentId) {

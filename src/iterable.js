@@ -5,54 +5,72 @@ const inc = x => x + 1
 const key = (_, k) => k
 
 class Query {
-  #data
+  #next
   #query
-  constructor (query, data) {
-    this.#data = data
+  constructor (query, next) {
+    this.#next = next
     this.#query = query
   }
   skip (amount) {
     return amount
       ? new Query(
         this.#query,
-        skip(this.#data, amount)
+        skip(this.#next, amount)
       ) : this
   }
   limit (amount) {
     return amount
       ? new Query(
         this.#query,
-        limit(this.#data, amount)
+        limit(this.#next, amount)
       ) : this
+  }
+  map (fn) {
+    return new Query(
+      this.#query,
+      map(this.#next, fn)
+    )
+
   }
   find (fn) {
     return new Query(
       this.#query,
-      filter(this.#data, fn)
+      filter(this.#next, fn)
     )
   }
   ids () {
     return collect(
-      map(this.#data, key)
+      map(this.#next, key)
     )
   }
   data (fn) {
     return collect(
       fn
-        ? map(this.#data, fn)
-        : this.#data
+        ? map(this.#next, fn)
+        : this.#next
       )
   }
   count () {
-    return reduce(this.#data, inc, 0)
+    return reduce(this.#next, inc, 0)
   }
-  include (...relationships) {
-    const inc = this.#query.include = this.#query.include ?? new Set
-    for (const rel of relationships) {
-      inc.add(rel)
-    }
-    return this
-  }
+  // [Symbol.iterator]* () {
+  //   let value
+  //   let proceed = true
+  //   const setValue = x => {
+  //     value = x
+  //   }
+  //   while (proceed) {
+  //     proceed = next(setValue)
+  //     yield value
+  //   }
+  // }
+  // include (...relationships) {
+  //   const inc = this.#query.include = this.#query.include ?? new Set
+  //   for (const rel of relationships) {
+  //     inc.add(rel)
+  //   }
+  //   return this
+  // }
 }
 
 const array = (array) => {
@@ -160,11 +178,11 @@ const limit = (next, limit) => {
 // const searchByTitle = (title, offset, limit) => {
 //   return Post
 //     .revisions()
-//     .find(post => post.data.title.includes(title))
+//     .filter(post => post.data.title.includes(title))
 //     .skip(offset)
 //     .limit(offset)
-//     .data(post => post.data.head)
 //     .include([ Tag, Category ])
+//     .data(post => post.data.head)
 // }
 //
 // const createPost = p =>
