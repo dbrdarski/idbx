@@ -62,6 +62,7 @@ export const initDocument = (instance, init) => {
       // console.log({ revision })
       store[document.type].selectModel(document.id, revision.id, publish, archived)
       const validation = store[document.type].validate(data)
+      if (!validation) throw Error("Validation failed")
       const documentKey = documentStore.getKey(write)(document)
       store[document.type].createRecord(document.id, record)
 
