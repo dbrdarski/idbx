@@ -31,7 +31,7 @@ export const repository = adapter => init => {
       }
     }
     save ({ type, id, data, publish = true, from }) {
-      console.log("SAVING", { type, id, data, publish, from })
+      // console.log("SAVING", { type, id, data, publish, from })
       const output = []
       const meta = {
         user: "Dane Brdarski",
