@@ -54,6 +54,11 @@ export const generateGetters = (instance, store, methods, type) => {
         documents.ids
       )
     },
+    activeRevisions () {
+      return getDocuments()
+        .filter(item => item.active != null)
+        .map(item => records.byId[item.active])
+    },
     getActiveRevision (documentId) {
       const { active } = documents.byId[documentId]
       return active && records.byId[active]
