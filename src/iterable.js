@@ -150,7 +150,7 @@ const skip = (prev, skip) => {
   let proceed = true
   return fn => {
     while (proceed && i++ < skip) {
-      proceed = prev(console.log)
+      proceed = prev()
     }
     return proceed &&= prev(fn)
   }
