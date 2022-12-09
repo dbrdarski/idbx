@@ -3,6 +3,7 @@ const getDocumentId = r => r.document.id
 const add = (x, y) => x + y
 const inc = x => x + 1
 const key = (_, k) => k
+const noop = () => {}
 
 class Query {
   #prev
@@ -150,7 +151,7 @@ const skip = (prev, skip) => {
   let proceed = true
   return fn => {
     while (proceed && i++ < skip) {
-      proceed = prev()
+      proceed = prev(noop)
     }
     return proceed &&= prev(fn)
   }
