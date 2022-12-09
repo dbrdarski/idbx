@@ -30,7 +30,6 @@ class Query {
       this.#query,
       map(this.#next, fn)
     )
-
   }
   find (fn) {
     return new Query(
@@ -158,11 +157,6 @@ const skip = (next, skip) => {
   }
 }
 
-const log = (msg) => (v) => {
-  console.log(return, ...v)
-  return v
-}
-
 const limit = (next, limit) => {
   let i = 0
   let proceed = true
@@ -170,7 +164,7 @@ const limit = (next, limit) => {
     if (i++ >= limit) {
       return proceed = false
     }
-    return proceed &&= log("WHATEV")(next(fn))
+    return proceed &&= next(fn)
   }
 }
 
