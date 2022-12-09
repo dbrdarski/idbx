@@ -5,52 +5,52 @@ const inc = x => x + 1
 const key = (_, k) => k
 
 class Query {
-  #next
+  #prev
   #query
-  constructor (query, next) {
-    this.#next = next
+  constructor (query, prev) {
+    this.#prev = prev
     this.#query = query
   }
   skip (amount) {
     return amount
       ? new Query(
         this.#query,
-        skip(this.#next, amount)
+        skip(this.#prev, amount)
       ) : this
   }
   limit (amount) {
     return amount
       ? new Query(
         this.#query,
-        limit(this.#next, amount)
+        limit(this.#prev, amount)
       ) : this
   }
   map (fn) {
     return new Query(
       this.#query,
-      map(this.#next, fn)
+      map(this.#prev, fn)
     )
   }
   find (fn) {
     return new Query(
       this.#query,
-      filter(this.#next, fn)
+      filter(this.#prev, fn)
     )
   }
   ids () {
     return collect(
-      map(this.#next, key)
+      map(this.#prev, key)
     )
   }
   data (fn) {
     return collect(
       fn
-        ? map(this.#next, fn)
-        : this.#next
+        ? map(this.#prev, fn)
+        : this.#prev
       )
   }
   count () {
-    return reduce(this.#next, inc, 0)
+    return reduce(this.#prev, inc, 0)
   }
   // [Symbol.iterator]* () {
   //   let value
@@ -59,7 +59,7 @@ class Query {
   //     value = x
   //   }
   //   while (proceed) {
-  //     proceed = next(setValue)
+  //     proceed = prev(setValue)
   //     yield value
   //   }
   // }
@@ -98,34 +98,34 @@ export default (data, ids) => {
   )
 }
 
-const collect = (next, ...list) => {
+const collect = (prev, ...list) => {
   let proceed = true
   while (proceed) {
-    proceed = next(item => list.push(item))
+    proceed = prev(item => list.push(item))
   }
   return list
 }
 
-const consume = (fn, next) => {
+const consume = (fn, prev) => {
   let proceed = true
   while (proceed) {
-    proceed = next(fn)
+    proceed = prev(fn)
   }
 }
 
-const map = (next, map) => fn => {
-  return next((value, prop, target) => {
+const map = (prev, map) => fn => {
+  return prev((value, prop, target) => {
     const mapped = map(value, prop, target)
     fn(mapped, prop, target)
   })
 }
 
-const filter = (next, filter) => {
+const filter = (prev, filter) => {
   let proceed = true
   return fn => {
     let match = false
     while (proceed && !match) {
-      proceed = next((...args) => {
+      proceed = prev((...args) => {
         match = filter(...args)
         match && fn(...args)
       })
@@ -134,10 +134,10 @@ const filter = (next, filter) => {
   }
 }
 
-const reduce = (next, reduce, acc) => {
+const reduce = (prev, reduce, acc) => {
   let proceed = true
   while (proceed) {
-    proceed = next((...args) => {
+    proceed = prev((...args) => {
       acc = reduce(acc, ...args)
     })
   }
@@ -145,26 +145,25 @@ const reduce = (next, reduce, acc) => {
 }
 
 
-const skip = (next, skip) => {
+const skip = (prev, skip) => {
   let i = 0
   let proceed = true
   return fn => {
-    while (proceed) {
-      proceed = next((...args) => {
-        i++ >= skip && fn(...args)
-      })
+    while (proceed && i++ < skip) {
+      proceed = prev(console.log)
     }
+    return proceed &&= prev(fn)
   }
 }
 
-const limit = (next, limit) => {
+const limit = (prev, limit) => {
   let i = 0
   let proceed = true
   return fn => {
     if (i++ >= limit) {
       return proceed = false
     }
-    return proceed &&= next(fn)
+    return proceed &&= prev(fn)
   }
 }
 
