@@ -24,19 +24,24 @@ class Query {
       ? new Query(
         this.#query,
         limit(this.#prev, amount)
-      ) : this
+      )
+      : this
   }
   map (fn) {
-    return new Query(
-      this.#query,
-      map(this.#prev, fn)
-    )
+    return fn
+      ? new Query(
+        this.#query,
+        map(this.#prev, fn)
+      )
+      : this
   }
   find (fn) {
-    return new Query(
-      this.#query,
-      filter(this.#prev, fn)
-    )
+    return fn
+      ? new Query(
+        this.#query,
+        filter(this.#prev, fn)
+      )
+      : this
   }
   ids () {
     return collect(
