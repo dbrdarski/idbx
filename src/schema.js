@@ -127,13 +127,13 @@ export const generateSetters = (instance, store, methods, type, initType) => {
   store[type].validate = idbx[type] = validate
   methods[type].createDocument = (data, publish) => {
     // console.log({ data, publish })
-    instance.save({ type, data, publish })
+    return instance.save({ type, data, publish })
   }
   methods[type].createRevision = function (id, data, from, publish) {
-    instance.save({ id, type, data, publish, from })
+    return instance.save({ id, type, data, publish, from })
   }
   methods[type].archive = function (id, status = true) {
-    instance.save({ })
+    return instance.save({ })
   }
   // return validate
 }
