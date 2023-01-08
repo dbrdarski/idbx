@@ -46,7 +46,7 @@ export const repository = adapter => init => {
         this.filename,
         output.join("")
       )
-      return records.getRecord(result).document.id
+      return records.getRecord(result)
     }
     query (fn) {
       return fn(getStoreInstance(this).methods)
