@@ -187,30 +187,6 @@ export const initDocument = (instance, init) => {
     generateModels(instance, name, def[name], def)
   }
 
-  // const taxonomy = (name, schema, relations) => {}
-
-  // const Post = taxonomy(
-  //   ({ hasOne, belongsTo }) => ({
-  //     head: {
-  //       title: String,
-  //       slug: String
-  //     },
-  //     body: Object
-  //   })
-  // )
-  //
-  // const taxonomy = (name) => {
-  //   return {
-  //     // hasOne () {},
-  //     // hasMany () {},
-  //     // belongsTo () {},
-  //     // belongsToMany () {},
-  //     create () {},
-  //     update () {},
-  //     archive () {}
-  //   }
-  // }
-
   return {
     stringStore,
     arrayStore,

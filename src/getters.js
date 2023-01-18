@@ -26,6 +26,7 @@ export const generateGetters = (instance, store, methods, type) => {
             revisions: [],
             publications: [],
           },
+          latest: null,
           active: null,
           // latest: null,
           archived: false
@@ -45,6 +46,7 @@ export const generateGetters = (instance, store, methods, type) => {
       }
       document.active = record.revision.published = record.revision.published || document.active
       document.archived = record.archived
+      document.latest = record.revision.id
     }
   }
   methods[type] = {
@@ -63,6 +65,10 @@ export const generateGetters = (instance, store, methods, type) => {
       const { active } = documents.byId[documentId]
       return active && records.byId[active]
     },
+    getLatestRevision (documentId) {
+      const { latest } = documents.byId[documentId]
+      return latest && records.byId[latest]
+    },
     getPublications (documentId) {
       return query(
         records.byId,
@@ -70,6 +76,9 @@ export const generateGetters = (instance, store, methods, type) => {
           ? records.publications
           : documents.byId[documentId].records.publications
       )
+    },
+    getRevision (revisionId) {
+      return records.byId[revisionId]
     },
     getRevisions (documentId) {
       return query(

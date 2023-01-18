@@ -13,19 +13,18 @@ const documentId = Symbol('documentId')
 const revisionId = Symbol('revisionId')
 const rel = Symbol('rel')
 
-window.relationships = {}
+const allRelationships = window.relationships = {}
 
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
 
   const storeHelpers = store[type]
 
-  const relationships = window.relationships[type] = {}
+  const relationships = allRelationships[type] = {}
+  // activeDocuments aka active
   const activeDocuments = relationships.activeDocuments = {}
   const documentsByRevision = relationships.documentsByRevision = {}
   const revisionsByDocument = relationships.revisionsByDocument = {}
-  // activeDocuments aka active
 
-  // let initializedModel = null
   let validatedModel = null
 
   const initializer = []
@@ -35,8 +34,6 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   storeHelpers.addRelation = (name, methods) => {
     validatorPrototype[name] = methods
   }
-  // const instance = Object.create(validatorPrototype)
-
   const updateRelatedModel = ($, current, next, { add, remove }) => {
     const id = $[documentId]
     const revId = $[revisionId]
