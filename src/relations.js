@@ -1,11 +1,11 @@
 const apply = context => fn => fn.call(context)
-const getOrSetDefault = (target, key, defaultValue) => {
-  if (!target.hasOwnProperty(key)) {
-    target[key] = defaultValue
-    return defaultValue
-  }
-  return target[key]
-}
+// const getOrSetDefault = (target, key, defaultValue) => {
+//   if (!target.hasOwnProperty(key)) {
+//     target[key] = defaultValue
+//     return defaultValue
+//   }
+//   return target[key]
+// }
 
 const isPublished = Symbol('isPublished')
 const isArchived = Symbol('isArchived')
@@ -13,13 +13,13 @@ const documentId = Symbol('documentId')
 const revisionId = Symbol('revisionId')
 const rel = Symbol('rel')
 
-const allRelationships = window.relationships = {}
+const allRelationships = globalThis.relationships = {}
 
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
 
   const storeHelpers = store[type]
-
   const relationships = allRelationships[type] = {}
+
   // activeDocuments aka active
   const activeDocuments = relationships.activeDocuments = {}
   const documentsByRevision = relationships.documentsByRevision = {}
@@ -34,6 +34,23 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   storeHelpers.addRelation = (name, methods) => {
     validatorPrototype[name] = methods
   }
+
+  storeHelpers.selectModel = (docId, revId, active, archived = false) => {
+    validatedModel = Object.create(validatorPrototype, {
+      [isPublished]: { value: active },
+      [isArchived]: { value: archived },
+      [documentId]: { value: docId },
+      [revisionId]: { value: revId }
+      // [rel]: { value: {} }
+    })
+    initializer.forEach(apply(validatedModel))
+  }
+
+  storeHelpers.releaseModel = () => {
+    finalizer.forEach(apply(validatedModel))
+    validatedModel = null
+  }
+
   const updateRelatedModel = ($, current, next, { add, remove }) => {
     const id = $[documentId]
     const revId = $[revisionId]
@@ -73,24 +90,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       value instanceof Set
         ? foreignKeyMatch.update(validatedModel[revisionId], ...value)
         : foreignKeyMatch.update(validatedModel[revisionId], value)
-
     }
-  }
-
-  storeHelpers.selectModel = (docId, revId, active, archived = false) => {
-    validatedModel = Object.create(validatorPrototype, {
-      [isPublished]: { value: active },
-      [isArchived]: { value: archived },
-      [documentId]: { value: docId },
-      [revisionId]: { value: revId }
-      // [rel]: { value: {} }
-    })
-    initializer.forEach(apply(validatedModel))
-  }
-
-  storeHelpers.releaseModel = () => {
-    finalizer.forEach(apply(validatedModel))
-    validatedModel = null
   }
 
   const relHandler = fn => {

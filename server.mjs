@@ -1,9 +1,9 @@
-import DBF from "./src/db.mjs"
+import { repository } from "./src/db.mjs"
 import http from "http"
 import { macros_article_JSON, cezare_borgia_JSON } from "./sample_data/index.js"
 import ascii from "./src/adapters/ascii.js"
 
-const DB = DBF(ascii)
+const DB = repository(ascii)
 // const h = (tag, attrs = null, ...children) => new VNode({
 //   tag,
 //   attrs,
@@ -12,8 +12,8 @@ const DB = DBF(ascii)
 
 // const db = await DB.open("./files/sample.idbx")
 // const file = "./files/naum.jsd"
-const file = "./files/wikipedia.idbx"
-// const file = "./files/new.idbx"
+// const file = "./files/wikipedia.idbx"
+const file = "./files/2023.idbx"
 
 // class VNode {
 //   constructor (o) {
@@ -80,8 +80,8 @@ const data = cezare_borgia_JSON
 
 const requestListener = async function (req, res) {
   if (req.url === "/favicon.ico") return
-  const db = await DB.open(file)
-  // await db.save(data, db.data)
+  // const db = await DB(() => {}).open(file)
+  await db.save(data)
 
   res.writeHead(200, {"Content-Type": "application/json"});
   // res.writeHead(200, {"Content-Type": "text/html"});

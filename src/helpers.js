@@ -1,4 +1,4 @@
-import { noop } from "./utils"
+import { noop } from "./utils.js"
 
 export const createStore = ({ SymbolType, serializer, handler, match }) => store(SymbolType, serializer, handler, match)
 

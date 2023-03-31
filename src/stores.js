@@ -2,7 +2,7 @@ import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, R
 import { createStore, serializeObject, deserializeObject, generateUUID } from "./helpers.js"
 import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
-import { initModels } from "./models"
+import { initModels } from "./models.js"
 
 const getNumberSymbol = (v) => NumberSymbol.fromNumeric(v)
 const getIntegerSymbol = (v) => `${v < 0 ? '-' : '+'}${IntegerSymbol.fromBigInt(v < 0 ? -1n * v : v)}`

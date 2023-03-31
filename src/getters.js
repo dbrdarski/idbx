@@ -1,4 +1,4 @@
-import query from "./iterable"
+import query from "./iterable.js"
 
 export const generateGetters = (instance, store, methods, type) => {
   const documents = {
@@ -90,3 +90,29 @@ export const generateGetters = (instance, store, methods, type) => {
     }
   }
 }
+
+/*
+
+revision ::
+  ()
+    :: .all()     => [r]
+    :: .latest()  => [r]
+    :: .active()  => [r]    // (aka .latestPublished())
+    :: .where()   => [r]
+
+  id => r
+
+document ::
+  ()
+    :: .all()     => [[r]]
+    :: .latest()  => [r]
+    :: .active()  => [r]    // (aka .latestPublished())
+    :: .where()   => [[r]]
+
+  id -> revisions<belongTo(id)>
+    :: .all()     => [r]
+    :: .latest()  => r
+    :: .active()  => r      // -> .latestPublished()
+    :: .where()   => [r]
+
+*/

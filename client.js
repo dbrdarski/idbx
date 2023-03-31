@@ -146,5 +146,17 @@ think about it and 'published' should be boolean!
 
 ---------------------------------------------------------------------
 
+EDIT:
+The 'published' and 'archived' properties can be included both in the revision
+and document to actually to distinguish between document and revision state.
+
+payload: {
+  document: { type: String, id: UUID, published: Boolean, archived: Boolean, active: UUID }, 
+  revision: { id: UUID, published: Boolean, archived: Boolean, author: UUID, timestamp: Number }
+  record:  { ...data }
+}
+
+document: { published, archived, active } should all be enumerable getters
+
 All in due time though!
 `)

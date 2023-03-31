@@ -1,4 +1,4 @@
-import { getType, isClass } from "./utils"
+import { getType, isClass } from "./utils.js"
 
 /*
   OPEN ISSUES:
@@ -14,7 +14,7 @@ import { getType, isClass } from "./utils"
     :: Elegantly
 */
 
-export const $or = window.$or = (v1, v2) => {
+export const $or = globalThis.$or = (v1, v2) => {
   const validator = x => v1(x) || v2(x)
   v1 = createValidator(v1)
   v2 = createValidator(v2)
@@ -123,7 +123,7 @@ const createModelSchema = model => {
 export const generateSetters = (instance, store, methods, type, initType) => {
   // const validate = createSchema(initType.call(relations, {}))
   const validate = createModelSchema(initType())
-  const idbx = window.idbx = window.idbx ?? {}
+  const idbx = globalThis.idbx = globalThis.idbx ?? {}
   store[type].validate = idbx[type] = validate
   methods[type].createDocument = (data, publish) => {
     // console.log({ data, publish })

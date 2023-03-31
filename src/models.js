@@ -1,6 +1,6 @@
-import { generateGetters } from "./getters"
-import { generateSetters } from "./schema"
-import { generateRelations } from "./relations"
+import { generateGetters } from "./getters.js"
+import { generateSetters } from "./schema.js"
+import { generateRelations } from "./relations.js"
 
 export const initModels = () => {
   const store = {}

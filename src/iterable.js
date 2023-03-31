@@ -1,6 +1,6 @@
 const getDocumentId = r => r.document.id
 
-const add = (x, y) => x + y
+// const add = (x, y) => x + y
 const inc = x => x + 1
 const key = (_, k) => k
 const noop = () => {}
@@ -55,6 +55,17 @@ class Query {
         : this.#prev
       )
   }
+  data2 (fn) {
+    const data = collect(
+      fn
+        ? map(this.#prev, fn)
+        : this.#prev
+      )
+      return {
+        data,
+        ...this.#query
+      }
+  }
   count () {
     return reduce(this.#prev, inc, 0)
   }
@@ -69,13 +80,34 @@ class Query {
   //     yield value
   //   }
   // }
-  // include (...relationships) {
-  //   const inc = this.#query.include = this.#query.include ?? new Set
-  //   for (const rel of relationships) {
-  //     inc.add(rel)
-  //   }
-  //   return this
-  // }
+  meta (meta) {
+    return (meta && Object.keys(meta).length)
+      ? new Query(
+        this.#prev,
+        {
+          ...this.#query,
+          meta: {
+            ...this.#query.meta,
+            ...meta
+          }
+        }
+      )
+      : this
+  }
+  include (...relationships) {
+    return relationships.length
+      ? new Query(
+        this.#prev,
+        {
+          ...this.#query,
+          relationships: new Set([
+            ...this.#query.relationships,
+            ...relationships
+          ])
+        }
+      )
+      : this
+  }
 }
 
 const array = (array) => {
