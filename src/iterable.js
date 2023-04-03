@@ -102,28 +102,28 @@ export default (store, storeHelpers) => {
     meta (meta) {
       return (meta && Object.keys(meta).length)
         ? new Query(
-          this.#iterator,
           {
             ...this.#query,
             meta: {
               ...this.#query.meta,
               ...meta
             }
-          }
+          },
+          this.#iterator
         )
         : this
     }
     include (...relationships) {
       return relationships.length
         ? new Query(
-          this.#iterator,
           {
             ...this.#query,
             relationships: new Set([
               ...this.#query.relationships,
               ...relationships
             ])
-          }
+          },
+          this.#iterator
         )
         : this
     }
