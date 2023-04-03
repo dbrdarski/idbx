@@ -123,7 +123,6 @@ const createModelSchema = model => {
 export const generateSetters = (instance, store, methods, type, initType) => {
   // const validate = createSchema(initType.call(relations, {}))
   const validate = createModelSchema(initType())
-  console.log({ validate })
   const idbx = globalThis.idbx = globalThis.idbx ?? {}
   store[type].validate = idbx[type] = validate
   methods[type].createDocument = (data, publish) => {

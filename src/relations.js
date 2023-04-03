@@ -31,6 +31,22 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const finalizer = []
   const validatorPrototype = {}
 
+  storeHelpers.include = (includes, relations) => {
+    for (const rel of relations) {
+      includes[rel] = new Set
+    }
+    return item => {
+      for (const rel of relations) {
+        const connections = activeDocuments[item]?.[rel]
+        if (connections == null) continue
+        for (const c of store[rel]?.getActiveDocuments(...connections)) {
+          includes[rel].add(c)
+        }
+      }
+      return item
+    }
+  }
+
   storeHelpers.addRelation = (name, methods) => {
     validatorPrototype[name] = methods
   }

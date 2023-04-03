@@ -1,6 +1,8 @@
-import query from "./iterable.js"
+import iterable from "./iterable.js"
 
 export const generateGetters = (instance, store, methods, type) => {
+  const query = iterable(store, store[type])
+
   const documents = {
     byId: {},
     ids: []
@@ -11,6 +13,13 @@ export const generateGetters = (instance, store, methods, type) => {
     publications: []
   }
   store[type] = {
+    getActiveDocuments (...ids) {
+      return ids.reduce((acc, id) => {
+        const { active } = documents.byId[documentId]
+        active && acc.push(records.byId[active])
+        return acc
+      }, [])
+    },
     hasDocument (id) {
       return documents.byId.hasOwnProperty(id)
     },
