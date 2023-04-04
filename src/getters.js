@@ -1,7 +1,8 @@
 import iterable from "./iterable.js"
 
 export const generateGetters = (instance, store, methods, type) => {
-  const query = iterable(store, store[type])
+  console.log(store, store[type], methods)
+  const query = iterable(store, store[type], methods)
 
   const documents = {
     byId: {},
