@@ -8,6 +8,7 @@ const noop = () => {}
 export default (store, storeHelpers) => {
 
   const withRelationships = (iterator, include) => (value, prop, target) => {
+    console.log({ prop })
     include(prop)
     return iterator(value, prop, target)
   }
