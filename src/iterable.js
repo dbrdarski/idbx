@@ -119,7 +119,7 @@ export default (store, storeHelpers) => {
           {
             ...this.#query,
             relationships: new Set([
-              ...this.#query.relationships,
+              ...this.#query.relationships ?? [],
               ...relationships
             ])
           },
