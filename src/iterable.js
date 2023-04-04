@@ -5,7 +5,7 @@ const inc = x => x + 1
 const key = (_, k) => k
 const noop = () => {}
 
-export default (store, storeHelpers, methods) => {
+export default (store, storeHelpers) => {
 
   const withRelationships = (iterator, include) => (value, prop, target) => {
     include(prop)
@@ -68,7 +68,7 @@ export default (store, storeHelpers, methods) => {
       const iterator = relationships
         ? withRelationships(
           this.#iterator,
-          methods.include(includes, relationships)
+          storeHelpers.include(includes, relationships)
         )
         : this.#iterator
       const data = collect(
