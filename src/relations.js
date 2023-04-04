@@ -36,8 +36,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       includes[rel] = new Set
     }
     return item => {
+      console.log({ relations })
       for (const rel of relations) {
         const connections = activeDocuments[item]?.[rel]
+        console.log({ connections })
         if (connections == null) continue
         for (const c of store[rel]?.getActiveDocuments(...connections)) {
           includes[rel].add(c)
