@@ -1,8 +1,6 @@
 import iterable from "./iterable.js"
 
 export const generateGetters = (instance, store, methods, type) => {
-  console.log(store, type, store[type], methods)
-  const query = iterable(store, store[type], methods)
 
   const documents = {
     byId: {},
@@ -59,6 +57,8 @@ export const generateGetters = (instance, store, methods, type) => {
       document.latest = record.revision.id
     }
   }
+  console.log(store, type, store[type], methods)
+  const query = iterable(store, store[type], methods)
   methods[type] = {
     getDocuments () {
       return query(
