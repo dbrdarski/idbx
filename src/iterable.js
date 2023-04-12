@@ -74,8 +74,8 @@ export default (store, storeHelpers) => {
         : this.#iterator
       const data = collect(
         fn
-          ? map(this.#iterator, fn)
-          : this.#iterator
+          ? map(iterator, fn)
+          : iterator
         )
       if (relationships) {
         delete this.#query.relationships
