@@ -8,7 +8,7 @@ const noop = () => {}
 export default (store, storeHelpers) => {
 
   const withRelationships = (iterator, include) => (value, prop, target) => {
-    console.log({ prop })
+    console.log({ value, prop, target, iterator, include })
     include(prop)
     return iterator(value, prop, target)
   }
@@ -240,11 +240,11 @@ export default (store, storeHelpers) => {
     let i = 0
     return new Query(
       {},
-      fn => {
+      next => {
         if (i < ids.length) {
           const key = ids[i++]
-          console.log("iterator", fn)
-          fn(data[key], key, data)
+          console.log("iterator", next)
+          next(data[key], key, data)
           return true
         }
         return false
