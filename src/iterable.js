@@ -243,6 +243,7 @@ export default (store, storeHelpers) => {
       fn => {
         if (i < ids.length) {
           const key = ids[i++]
+          console.log("iterator", fn)
           fn(data[key], key, data)
           return true
         }
