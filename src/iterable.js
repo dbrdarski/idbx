@@ -7,11 +7,20 @@ const noop = () => {}
 
 export default (store, storeHelpers) => {
 
-  const withRelationships = (iterator, include) => (value, prop, target) => {
+  const withRelationships = (iterator, include) => next => {
     console.log({ value, prop, target, iterator, include })
     include(prop)
-    return iterator(value, prop, target)
+    return next(value, prop, target)
   }
+
+  const map = (iterator, map) => fn => {
+    return iterator((value, prop, target) => {
+      // map needs to be composid fro inside data() to fetch the ids
+      const mapped = map(value, prop, target)
+      fn(mapped, prop, target)
+    })
+  }
+
 
   class Query {
     #iterator
@@ -132,9 +141,9 @@ export default (store, storeHelpers) => {
 
   const array = (array) => {
     let i = 0
-    return fn => {
+    return next => {
       if (i < array.length) {
-        fn(array[i++], i, array)
+        next(array[i++], i, array)
         return true
       }
       return false
@@ -156,22 +165,22 @@ export default (store, storeHelpers) => {
     }
   }
 
-  const map = (iterator, map) => fn => {
+  const map = (iterator, map) => next => {
     return iterator((value, prop, target) => {
       // map needs to be composid fro inside data() to fetch the ids
       const mapped = map(value, prop, target)
-      fn(mapped, prop, target)
+      next(mapped, prop, target)
     })
   }
 
   const filter = (iterator, filter) => {
     let proceed = true
-    return fn => {
+    return next => {
       let match = false
       while (proceed && !match) {
         proceed = iterator((...args) => {
           match = filter(...args)
-          match && fn(...args)
+          match && next(...args)
         })
       }
       return proceed
@@ -192,22 +201,22 @@ export default (store, storeHelpers) => {
   const skip = (iterator, skip) => {
     let i = 0
     let proceed = true
-    return fn => {
+    return next => {
       while (proceed && i++ < skip) {
         proceed = iterator(noop)
       }
-      return proceed &&= iterator(fn)
+      return proceed &&= iterator(next)
     }
   }
 
   const limit = (iterator, limit) => {
     let i = 0
     let proceed = true
-    return fn => {
+    return next => {
       if (i++ >= limit) {
         return proceed = false
       }
-      return proceed &&= iterator(fn)
+      return proceed &&= iterator(next)
     }
   }
 
