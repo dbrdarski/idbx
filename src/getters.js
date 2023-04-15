@@ -14,7 +14,7 @@ export const generateGetters = (instance, store, methods, type) => {
   store[type] = {
     getActiveDocuments (...ids) {
       return ids.reduce((acc, id) => {
-        const { active } = documents.byId[documentId]
+        const { active } = documents.byId[id]
         active && acc.push(records.byId[active])
         return acc
       }, [])
