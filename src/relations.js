@@ -33,14 +33,14 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 
   storeHelpers.include = (includes, relations) => {
     for (const rel of relations) {
-      includes[rel] = new Set
+      includes[rel] = {}
     }
     return item => {
       for (const rel of relations) {
         const connections = activeDocuments[item]?.[rel]
         if (connections == null) continue
         for (const c of store[rel]?.getActiveDocuments(...connections)) {
-          includes[rel].add(c)
+          includes[rel][c.document.id] = c
         }
       }
       return item
