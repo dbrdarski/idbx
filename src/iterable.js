@@ -7,21 +7,6 @@ const noop = () => {}
 
 export default (store, storeHelpers) => {
 
-  const withRelationships = (iterator, include) => next => {
-    console.log({ value, prop, target, iterator, include })
-    include(prop)
-    return next(value, prop, target)
-  }
-
-  const map = (iterator, map) => fn => {
-    return iterator((value, prop, target) => {
-      // map needs to be composid fro inside data() to fetch the ids
-      const mapped = map(value, prop, target)
-      fn(mapped, prop, target)
-    })
-  }
-
-
   class Query {
     #iterator
     #query
@@ -76,7 +61,7 @@ export default (store, storeHelpers) => {
       const relationships = this.#query.relationships
       const includes = relationships && {}
       const iterator = relationships
-        ? withRelationships(
+        ? include(
           this.#iterator,
           storeHelpers.include(includes, relationships)
         )
@@ -218,6 +203,14 @@ export default (store, storeHelpers) => {
       }
       return proceed &&= iterator(next)
     }
+  }
+
+  const include = (iterator, include) => next => {
+    return iterator((value, prop, target) => {
+      console.log({ value, prop, target, iterator, include })
+      include(prop)
+      next(value, prop, target)
+    })
   }
 
   // const a = effect(Array.from({ length: 100000 }, (x, i) => x => { console.log(i); return x(); } ))
