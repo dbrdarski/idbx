@@ -207,7 +207,6 @@ export default (store, storeHelpers) => {
 
   const include = (iterator, include) => next => {
     return iterator((value, prop, target) => {
-      console.log({ value, prop, target, iterator, include })
       include(prop)
       next(value, prop, target)
     })
@@ -245,7 +244,6 @@ export default (store, storeHelpers) => {
       next => {
         if (i < ids.length) {
           const key = ids[i++]
-          console.log("iterator", next)
           next(data[key], key, data)
           return true
         }
