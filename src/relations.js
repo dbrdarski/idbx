@@ -1,3 +1,5 @@
+import { nameSymbol } from "./utils.js"
+
 const apply = context => fn => fn.call(context)
 // const getOrSetDefault = (target, key, defaultValue) => {
 //   if (!target.hasOwnProperty(key)) {
@@ -12,7 +14,7 @@ const connector = model => new Proxy({
     if (target.hasOwnProperty(prop)) {
       return connector(target[prop])
     }
-    throw Error(`Model ${model.name} has no relationship named '${prop}'`)
+    throw Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
   },
   apply (target, thisArg, args) {
     return target.apply(thisArg, args)
@@ -40,12 +42,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const relationships = allRelationships[type] = {}
 
   // activeDocuments aka active
-  const self = Symbol("self")
   const activeDocuments = relationships.activeDocuments = {}
   const documentsByRevision = relationships.documentsByRevision = {}
   const revisionsByDocument = relationships.revisionsByDocument = {}
   const schema = relationships.schema = {
-    [self]: type
+    [nameSymbol]: type
   }
 
   let validatedModel = null
@@ -53,6 +54,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const initializer = []
   const finalizer = []
   const validatorPrototype = {}
+
   storeHelpers.include = (includes, relations) => {
     for (const rel of relations) {
       includes[rel] = {}
@@ -65,7 +67,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       for (const rel of relations) {
         const connections = activeDocuments[item]?.[rel]
         if (connections == null || !connections.length) continue // TODO: investigate connections.length
-        const relModelName = schema[rel][self]
+        const relModelName = schema[rel][nameSymbol]
         for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
           includes[rel][record.document.id] = record
         }
@@ -74,19 +76,51 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     }
   }
 
-  storeHelpers.include2 = (includes, relations) => {
-    for (const [ rel ] of relations) {
-      includes[rel] = {}
+  const createIncludeHandlers = (includes, relationships) =>
+    relationships.map(([ rel, model ]) => {
+      includes[rel] = includes[rel] || {}
+      const children = relStore.has(model)
+        ? null
+        : includeHandler(model, includes)
+      const type = model[nameSymbol]
+      return item => {
+        const connections = allRelationships[type][item]?.[rel]
+        if (connections == null || !connections.length) return // TODO: investigate connections.length
+        for (const record of store[type]?.getActiveDocuments(...connections)) {
+          includes[rel][record.document.id] = record
+        }
+        children?.(record.document.id)
+      }
+    })
+
+  const includeHandler = (handler, includes, ...modelOrDefault) => {
+    const relationships = Object.entries(handler(...modelOrDefault))
+    const handlers = createIncludeHandlers(includes, relationships)
+    return item => {
+      for (const insert of handlers) {
+        insert(item)
+      }
+    }
+  }
+
+  storeHelpers.include3 = (handler, includes) =>
+    includeHandler(handler, null, includes, connector(typeInit))
+
+  storeHelpers.include2 = (includes, handler, children) => {
+    const relations = Object.entries(handler(connector(modelInit)))
+    for (const [ rel, model ] of relations) {
+      includes[rel] = includes[rel] || {}
+      relStore.has(model)
     }
     return item => {
       // this logic needs to be tested with hasOne examples
       // it mightm be the case that this is completely fine
       // or that this logic needs to be updated to handle
       // single item connections
-      for (const [ rel, handler ] of relations) {
+      for (const [ rel, model ] of relations) {
         const connections = activeDocuments[item]?.[rel]
         if (connections == null || !connections.length) continue // TODO: investigate connections.length
-        const relModelName = schema[rel][self]
+        const relModelName = schema[rel][nameSymbol]
         for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
           includes[rel][record.document.id] = record
         }
@@ -172,8 +206,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       }
       const [ name, model ] = Object.entries(def)[0]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
-      schema[name] = allRelationships[model.name].schema
-      store[model.name].addRelation(relationKey, {
+      // schema[name] = allRelationships[model[nameSymbol]].schema
+      store[model[nameSymbol]].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
             const document = activeDocuments[id] = activeDocuments[id] || {}
@@ -208,8 +242,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       }
       const [ name, model ] = Object.entries(def)[0]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
-      schema[name] = allRelationships[model.name].schema
-      store[model.name].addRelation(relationKey, {
+      // schema[name] = allRelationships[model[nameSymbol]].schema
+      store[model[nameSymbol]].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
             const document = activeDocuments[id] = activeDocuments[id] || {}
@@ -236,7 +270,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     },
     belongsToOne (def) {
       const [ name, model ] = Object.entries(def)[0]
-      schema[name] = allRelationships[model.name].schema
+      // schema[name] = allRelationships[model[nameSymbol]].schema
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [
         () => state = null,
@@ -244,9 +278,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         () => setOwn(name, state)
       ])
       return id => {
-        const match = store[model.name].hasDocument(id)
+        const match = store[model[nameSymbol]].hasDocument(id)
         if (!match) {
-          throw Error(`Id ${id} does not exist as a ${model.name}`)
+          throw Error(`Id ${id} does not exist as a ${model[nameSymbol]}`)
         }
         const prev = activeDocuments?.[validatedModel[documentId]]?.[name]
         if (prev != null && prev !== id) {
@@ -260,7 +294,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     },
     belongsToMany (def) {
       const [ name, model ] = Object.entries(def)[0]
-      schema[name] = allRelationships[model.name].schema
+      // schema[name] = allRelationships[model[nameSymbol]].schema
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [
         () => state = new Set,
@@ -268,8 +302,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         () => setOwn(name, state)
       ])
       return id => {
-        const match = store[model.name].hasDocument(id)
-        if (!match) throw Error(`Id ${id} does not exist as a ${model.name}`)
+        const match = store[model[nameSymbol]].hasDocument(id)
+        if (!match) throw Error(`Id ${id} does not exist as a ${model[nameSymbol]}`)
         set(id)
         return true
       }

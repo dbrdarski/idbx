@@ -1,7 +1,6 @@
 import iterable from "./iterable.js"
 
 export const generateGetters = (instance, store, methods, type) => {
-
   const documents = {
     byId: {},
     ids: []

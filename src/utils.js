@@ -1,3 +1,5 @@
+export const nameSymbol = Symbol("name")
+
 const radix32bits = 2n ** 32n
 
 export function noop () {}
