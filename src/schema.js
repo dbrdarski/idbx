@@ -85,9 +85,6 @@ const createValidator = (def, validator) => {
     [ def ] = def
     const validator = validateArray(def, createValidator(def))
     return xs => xs.every(validator)
-
-    // TODO: implement array logic
-    return () => true
   } else if (typeof def === "function") {
     return isClass(def) ? createSchema(def, validator) : def
   }

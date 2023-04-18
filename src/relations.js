@@ -7,6 +7,18 @@ const apply = context => fn => fn.call(context)
 //   return target[key]
 // }
 
+const connector = model => new Proxy({
+  get (target, prop) {
+    if (target.hasOwnProperty(prop)) {
+      return connector(target[prop])
+    }
+    throw Error(`Model ${model.name} has no relationship named '${prop}'`)
+  },
+  apply (target, thisArg, args) {
+    return target.apply(thisArg, args)
+  }
+})
+
 const isPublished = Symbol('isPublished')
 const isArchived = Symbol('isArchived')
 const documentId = Symbol('documentId')
@@ -14,36 +26,73 @@ const revisionId = Symbol('revisionId')
 const rel = Symbol('rel')
 
 const allRelationships = globalThis.relationships = {}
+const relStore = new Map()
 
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
-
+  const modelSchema = {
+    type,
+    model: typeInit,
+    relations: {},
+    handlers: {}
+  }
+  relStore.set(typeInit, modelSchema)
   const storeHelpers = store[type]
   const relationships = allRelationships[type] = {}
 
   // activeDocuments aka active
+  const self = Symbol("self")
   const activeDocuments = relationships.activeDocuments = {}
   const documentsByRevision = relationships.documentsByRevision = {}
   const revisionsByDocument = relationships.revisionsByDocument = {}
+  const schema = relationships.schema = {
+    [self]: type
+  }
 
   let validatedModel = null
 
   const initializer = []
   const finalizer = []
   const validatorPrototype = {}
-
   storeHelpers.include = (includes, relations) => {
     for (const rel of relations) {
       includes[rel] = {}
     }
     return item => {
+      // this logic needs to be tested with hasOne examples
+      // it mightm be the case that this is completely fine
+      // or that this logic needs to be updated to handle
+      // single item connections
       for (const rel of relations) {
         const connections = activeDocuments[item]?.[rel]
-        if (connections == null) continue
-        for (const c of store[rel]?.getActiveDocuments(...connections)) {
-          includes[rel][c.document.id] = c
+        if (connections == null || !connections.length) continue // TODO: investigate connections.length
+        const relModelName = schema[rel][self]
+        for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
+          includes[rel][record.document.id] = record
         }
       }
       return item
+    }
+  }
+
+  storeHelpers.include2 = (includes, relations) => {
+    for (const [ rel ] of relations) {
+      includes[rel] = {}
+    }
+    return item => {
+      // this logic needs to be tested with hasOne examples
+      // it mightm be the case that this is completely fine
+      // or that this logic needs to be updated to handle
+      // single item connections
+      for (const [ rel, handler ] of relations) {
+        const connections = activeDocuments[item]?.[rel]
+        if (connections == null || !connections.length) continue // TODO: investigate connections.length
+        const relModelName = schema[rel][self]
+        for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
+          includes[rel][record.document.id] = record
+        }
+        handler?.(record.document.id)
+      }
+      // return item // TODO: see if commenting out this breaks existing logic
     }
   }
 
@@ -122,6 +171,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         throw Error("Relation key is required on 'hasOne' relationships!")
       }
       const [ name, model ] = Object.entries(def)[0]
+      Object.defineProperty(typeInit, name, { value: model, enumerable: true })
+      schema[name] = allRelationships[model.name].schema
       store[model.name].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
@@ -156,6 +207,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         throw Error("Relation key is required on 'hasMany' relationships!")
       }
       const [ name, model ] = Object.entries(def)[0]
+      Object.defineProperty(typeInit, name, { value: model, enumerable: true })
+      schema[name] = allRelationships[model.name].schema
       store[model.name].addRelation(relationKey, {
         add (documentId, ...ids) {
           for (const id of ids) {
@@ -183,6 +236,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     },
     belongsToOne (def) {
       const [ name, model ] = Object.entries(def)[0]
+      schema[name] = allRelationships[model.name].schema
+      Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [
         () => state = null,
         id => state = id,
@@ -205,6 +260,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     },
     belongsToMany (def) {
       const [ name, model ] = Object.entries(def)[0]
+      schema[name] = allRelationships[model.name].schema
+      Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [
         () => state = new Set,
         id => state.add(id),

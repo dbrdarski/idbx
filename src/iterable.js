@@ -5,8 +5,10 @@ const inc = x => x + 1
 const key = (_, k) => k
 const noop = () => {}
 
-export default (store, storeHelpers) => {
+// TODO: reimplement include recursively
+// reimplement relationships on a data
 
+export default (store, storeHelpers) => {
   class Query {
     #iterator
     #query
@@ -80,6 +82,29 @@ export default (store, storeHelpers) => {
         ...this.#query
       }
     }
+    data3 (fn) {
+      const relationships = this.#query.relationships
+      const includes = relationships && {}
+      const iterator = relationships
+        ? include(
+          this.#iterator,
+          storeHelpers.include(includes, relationships)
+        )
+        : this.#iterator
+      const data = collect(
+        fn
+          ? map(iterator, fn)
+          : iterator
+        )
+      if (relationships) {
+        delete this.#query.relationships
+        this.#query.includes = includes
+      }
+      return {
+        data,
+        ...this.#query
+      }
+    }
     count () {
       return reduce(this.#iterator, inc, 0)
     }
@@ -121,6 +146,10 @@ export default (store, storeHelpers) => {
           this.#iterator
         )
         : this
+    }
+    include2 (fn) {
+      fn && (this.#query.includer = (this.#query.includer ?? new Set).add(fn))
+      return this
     }
   }
 
