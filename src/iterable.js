@@ -83,7 +83,7 @@ export default (store, storeHelpers) => {
       }
     }
     data3 (fn) {
-      const relationships = this.#query.relationships
+      const [ relationships ] = this.#query.includer
       const includes = relationships && {}
       const iterator = relationships
         ? include(
