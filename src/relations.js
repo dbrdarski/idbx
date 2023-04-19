@@ -104,7 +104,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   storeHelpers.include3 = (handler, includes) =>
-    includeHandler(handler, null, includes, connector(typeInit))
+    includeHandler(handler, includes, connector(typeInit))
 
   storeHelpers.include2 = (includes, handler, children) => {
     const relations = Object.entries(handler(connector(modelInit)))
