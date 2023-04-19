@@ -11,7 +11,7 @@ const apply = context => fn => fn.call(context)
 const noop = () => {}
 const connector = model => new Proxy(noop, {
   get (target, prop) {
-    if (prop === rel) {
+    if (prop === relSymbol) {
       return model
     }
     if (model.hasOwnProperty(prop)) {
@@ -29,7 +29,7 @@ const isPublished = Symbol('isPublished')
 const isArchived = Symbol('isArchived')
 const documentId = Symbol('documentId')
 const revisionId = Symbol('revisionId')
-const rel = Symbol('rel')
+const relSymbol = Symbol('rel')
 
 const allRelationships = globalThis.relationships = {}
 const relStore = new Map()
@@ -83,7 +83,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const createIncludeHandlers = (includes, relationships) =>
     relationships.map(([ rel, model ]) => {
       includes[rel] = includes[rel] || {}
-      const isModel = relStore.has(model[rel])
+      const isModel = relStore.has(model[relSymbol])
       const children = isModel
         ? null
         : includeHandler(model, includes)
