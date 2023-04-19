@@ -96,7 +96,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       const parent = model[parentSymbol]
       return item => {
         const connections = allRelationships[parent].activeDocuments[item]?.[rel]
-        if (connections == null || !connections.length) return // TODO: investigate connections.length
+        if (connections == null) return // TODO: investigate connections.length
         for (const record of store[type]?.getActiveDocuments(...connections)) {
           includes[rel][record.document.id] = record
         }
