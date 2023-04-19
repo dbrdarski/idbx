@@ -87,7 +87,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 
   const createIncludeHandlers = (includes, relationships, type) =>
     relationships.map(([ rel, model ]) => {
-      conosle.log({ rel, model })
+      console.log({ rel, model })
       includes[rel] = includes[rel] || {}
       const isModel = relStore.has(model[relSymbol])
       const children = isModel
