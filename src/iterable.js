@@ -83,12 +83,13 @@ export default (store, storeHelpers) => {
       }
     }
     data3 (fn) {
-      const [ relationships ] = this.#query.includer
+      const relationships = this.#query.includer
+      const [ def ] = relationships
       const includes = relationships && {}
       const iterator = relationships
         ? include(
           this.#iterator,
-          storeHelpers.include3(fn, includes)
+          storeHelpers.include3(def, includes)
         )
         : this.#iterator
       const data = collect(
@@ -97,7 +98,7 @@ export default (store, storeHelpers) => {
           : iterator
         )
       if (relationships) {
-        delete this.#query.relationships
+        delete this.#query.includer
         this.#query.includes = includes
       }
       return {
