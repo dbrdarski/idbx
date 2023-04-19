@@ -14,7 +14,8 @@ const connector = model => new Proxy(model, {
     if (target.hasOwnProperty(prop)) {
       return connector(target[prop])
     }
-    throw Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
+    console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
+    return
   },
   apply (target, thisArg, args) {
     return target.apply(thisArg, args)
