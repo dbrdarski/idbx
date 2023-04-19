@@ -15,7 +15,8 @@ const connector = model => new Proxy(noop, {
       return model
     }
     if (model.hasOwnProperty(prop)) {
-      return connector(model[prop])
+      const value = model[prop]
+      return typeof value === "function" ? connector(value) : value
     }
     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
     return
