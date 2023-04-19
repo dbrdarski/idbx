@@ -88,7 +88,7 @@ export default (store, storeHelpers) => {
       const iterator = relationships
         ? include(
           this.#iterator,
-          storeHelpers.include(includes, relationships)
+          storeHelpers.include3(fn, includes)
         )
         : this.#iterator
       const data = collect(
