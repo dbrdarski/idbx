@@ -11,6 +11,9 @@ const apply = context => fn => fn.call(context)
 const noop = () => {}
 const connector = model => new Proxy(noop, {
   get (target, prop) {
+    if (prop === rel) {
+      return model
+    }
     if (model.hasOwnProperty(prop)) {
       return connector(model[prop])
     }
@@ -80,7 +83,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const createIncludeHandlers = (includes, relationships) =>
     relationships.map(([ rel, model ]) => {
       includes[rel] = includes[rel] || {}
-      const children = relStore.has(model)
+      const isModel = relStore.has(model[rel])
+      const children = isModel
         ? null
         : includeHandler(model, includes)
       const type = model[nameSymbol]
