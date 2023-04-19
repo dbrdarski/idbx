@@ -9,7 +9,7 @@ const apply = context => fn => fn.call(context)
 //   return target[key]
 // }
 
-const connector = model => new Proxy({
+const connector = model => new Proxy(model, {
   get (target, prop) {
     if (target.hasOwnProperty(prop)) {
       return connector(target[prop])
