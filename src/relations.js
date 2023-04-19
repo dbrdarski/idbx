@@ -8,17 +8,17 @@ const apply = context => fn => fn.call(context)
 //   }
 //   return target[key]
 // }
-
-const connector = model => new Proxy(model, {
+const noop = () => {}
+const connector = model => new Proxy(noop, {
   get (target, prop) {
-    if (target.hasOwnProperty(prop)) {
-      return connector(target[prop])
+    if (model.hasOwnProperty(prop)) {
+      return connector(model[prop])
     }
     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
     return
   },
   apply (target, thisArg, args) {
-    return target.apply(thisArg, args)
+    return model.apply(thisArg, args)
   }
 })
 
