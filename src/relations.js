@@ -9,14 +9,17 @@ const apply = context => fn => fn.call(context)
 //   return target[key]
 // }
 const noop = () => {}
-const connector = model => new Proxy(noop, {
+const connector = (model, parent) => new Proxy(noop, {
   get (target, prop) {
     if (prop === relSymbol) {
       return model
     }
+    if (prop === parentSymbol) {
+      return parent
+    }
     if (model.hasOwnProperty(prop)) {
       const value = model[prop]
-      return typeof value === "function" ? connector(value) : value
+      return typeof value === "function" ? connector(value, model[nameSymbol]) : value
     }
     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
     return
@@ -26,11 +29,12 @@ const connector = model => new Proxy(noop, {
   }
 })
 
-const isPublished = Symbol('isPublished')
-const isArchived = Symbol('isArchived')
-const documentId = Symbol('documentId')
-const revisionId = Symbol('revisionId')
-const relSymbol = Symbol('rel')
+const isPublished = Symbol("isPublished")
+const isArchived = Symbol("isArchived")
+const documentId = Symbol("documentId")
+const revisionId = Symbol("revisionId")
+const parentSymbol = Symbol("parent")
+const relSymbol = Symbol("rel")
 
 const allRelationships = globalThis.relationships = {}
 const relStore = new Map()
@@ -81,7 +85,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     }
   }
 
-  const createIncludeHandlers = (includes, relationships) =>
+  const createIncludeHandlers = (includes, relationships, type) =>
     relationships.map(([ rel, model ]) => {
       includes[rel] = includes[rel] || {}
       const isModel = relStore.has(model[relSymbol])
@@ -89,8 +93,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         ? null
         : includeHandler(model, includes)
       const type = model[nameSymbol]
+      const parent = model[parentSymbol]
       return item => {
-        const connections = allRelationships[type].activeDocuments[item]?.[rel]
+        const connections = allRelationships[parent].activeDocuments[item]?.[rel]
         if (connections == null || !connections.length) return // TODO: investigate connections.length
         for (const record of store[type]?.getActiveDocuments(...connections)) {
           includes[rel][record.document.id] = record
