@@ -90,7 +90,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         : includeHandler(model, includes)
       const type = model[nameSymbol]
       return item => {
-        const connections = allRelationships[type][item]?.[rel]
+        const connections = allRelationships[type].activeDocuments[item]?.[rel]
         if (connections == null || !connections.length) return // TODO: investigate connections.length
         for (const record of store[type]?.getActiveDocuments(...connections)) {
           includes[rel][record.document.id] = record
