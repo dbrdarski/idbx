@@ -85,9 +85,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     }
   }
 
-  const createIncludeHandlers = (includes, relationships, type) =>
+  const createIncludeHandlers = (includes, relationships) =>
     relationships.map(([ rel, model ]) => {
-      console.log({ rel, model })
       includes[rel] = includes[rel] || {}
       const isModel = relStore.has(model[relSymbol])
       const children = isModel
@@ -95,6 +94,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         : includeHandler(model, includes)
       const type = model[nameSymbol]
       const parent = model[parentSymbol]
+      console.log({ rel, model, type, parent })
       return item => {
         const connections = allRelationships[parent].activeDocuments[item]?.[rel]
         if (connections == null) return // TODO: investigate connections.length
@@ -105,8 +105,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       }
     })
 
-  const includeHandler = (handler, includes, ...modelOrDefault) => {
-    const relationships = Object.entries(handler(...modelOrDefault))
+  const includeHandler = (handler, includes, ...connectedModel) => {
+    const relationships = Object.entries(handler(...connectedModel))
     const handlers = createIncludeHandlers(includes, relationships)
     return item => {
       for (const insert of handlers) {
