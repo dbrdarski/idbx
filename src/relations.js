@@ -158,6 +158,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const recorder = (set, rel, type, handler, id) => {
     const connections = allRelationships[type].activeDocuments[id]?.[rel]
     connections == null && console.log({ type, id, rel, allRelationships })
+    console.log({ connections })
     if (connections == null) return // TODO: investigate connections.length
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
@@ -187,11 +188,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const modelProxy = (model, includes, parentName, parentRel) => {
-    console.log("CREATE", { model, parentName, parentRel })
+    // console.log("CREATE", { model, parentName, parentRel })
     let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
-        console.log("GET", model, prop, parentName, parentRel)
+        // console.log("GET", model, prop, parentName, parentRel)
         // if (prop === isModel)
         //   return relStore.has(model)
         if (!prop in model) {
@@ -206,7 +207,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           : value
       },
       apply (_, thisArg, fns) {
-        console.log("APPLY", model, parentName, parentRel)
+        // console.log("APPLY", model, parentName, parentRel)
         if (fns.length) {
           let set, childrenHandler
           fns.forEach(fn => {
