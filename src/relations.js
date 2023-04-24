@@ -173,10 +173,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       },
       apply (_, thisArg, models) {
         // this is $()
-        console.log({ models, _, thisArg })
         const handlers = models.map(apply)
+        console.log({ models, handlers, _, thisArg })
         return item => {
           for (const handler of handlers) {
+            console.log(handler)
             handler?.(item)
           }
         }
