@@ -187,6 +187,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const modelProxy = (model, includes, parentName, parentRel) => {
+    console.log("CREATE", model, parentName, parentRel)
     let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
@@ -216,7 +217,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
             }
           })
           set = set ?? setter(includes, parentRel)
-          return () => recorder.bind(null, set, parentRel, parentName, childrenHandler)
+          return () => recorder.bind(null, set, parentRel, parentName + 22, childrenHandler + 33)
         } else {
           const set = setter(includes, parentRel)
           return recorder.bind(null, set, parentRel, parentName, null)
