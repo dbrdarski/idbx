@@ -54,8 +54,8 @@ const modelProxy = (model, includes, parentName, parentRel) => {
       if (!prop in model) {
         console.error(
           Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
-          return
         )
+        return
       }
       const value = model[prop]
       return relStore.has(value)
