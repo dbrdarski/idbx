@@ -216,10 +216,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           })
           set = set ?? setter(includes, parentRel)
           console.log({ set, childrenHandler })
-          return () => recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
+          return () => recorder.bind(null, set, parentRelparentName, childrenHandler)
         } else {
           const set = setter(includes, parentRel)
-          return recorder.bind(null, set, parentRel, model[nameSymbol], null)
+          return recorder.bind(null, set, parentRel, parentName, null)
         }
       }
     })
