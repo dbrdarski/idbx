@@ -1,6 +1,7 @@
-import { nameSymbol } from "./utils.js"
+import { nameSymbol, once } from "./utils.js"
 
-const apply = context => fn => fn.call(context)
+const applyContext = context => fn => fn.call(context)
+const apply = fn => fn()
 // const getOrSetDefault = (target, key, defaultValue) => {
 //   if (!target.hasOwnProperty(key)) {
 //     target[key] = defaultValue
@@ -8,33 +9,164 @@ const apply = context => fn => fn.call(context)
 //   }
 //   return target[key]
 // }
+// const isModel = Symbol("isModel")
 const noop = () => {}
-const connector = (model, parent) => new Proxy(noop, {
-  get (target, prop) {
-    if (prop === relSymbol) {
-      return model
+
+const setter = (includes, rel) => {
+  const path = includes[rel] = includes[rel] || {}
+  return item => path[item.document.id] = item
+}
+
+const recorder = (set, rel, type, handler, id) => {
+  const connections = activeDocuments[id]?.[rel]
+  if (connections == null) continue // TODO: investigate connections.length
+    for (const record of store[type]?.getActiveDocuments(...connections)) {
+      set(record)
     }
-    if (prop === parentSymbol) {
-      return parent
+  handler?.(record.document.id)
+}
+
+const includeProxy = (includes) => {
+  const proxy = new Proxy(noop, {
+    get (_, prop) {
+      // this is $.tag
+      return setter.bind(null, includes, prop)
+    },
+    apply (_, thisArg, models) {
+      // this is $()
+      const handlers = models.map(apply)
+      return item => {
+        for (const handler of handlers) {
+          handler(item)
+        }
+      }
     }
-    if (model.hasOwnProperty(prop)) {
+  })
+  return proxy
+}
+
+const modelProxy = (model, includes, parentName, parentRel) => {
+  let rel, dataHandler
+  const proxy = new Proxy(noop, {
+    get (_, prop) {
+      // if (prop === isModel)
+      //   return relStore.has(model)
+      if (!prop in model) {
+        console.error(
+          Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
+          return
+        )
+      }
       const value = model[prop]
-      return typeof value === "function" ? connector(value, model[nameSymbol]) : value
+      return relStore.has(value)
+        ? modelProxy(value, includes, model[nameSymbol], prop)
+        : value
+    },
+    apply (_, thisArg, fns) {
+      if (fns.length) {
+        let set, childrenHandler
+        fns.forEach(fn => {
+          if (fn.length) {
+            childrenHandler = fn(proxy)
+          } else {
+            set = fn()
+          }
+        })
+        return recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
+      } else {
+        const set = setter(includes, parentRel)
+        return recorder.bind(null, set, parentRel, model[nameSymbol], null)
+      }
     }
-    console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
-    return
-  },
-  apply (target, thisArg, args) {
-    return model.apply(thisArg, args)
-  }
-})
+  })
+  return proxy
+}
+// const connector2 = (model, parent) => new Proxy(noop, {
+//   get (target, prop) {
+//     if (model.hasOwnProperty(prop)) {
+//       const value = model[prop]
+//       return typeof value === "function" ? connector2(value, model[nameSymbol]) : value
+//     }
+//     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
+//     return
+//   },
+//   apply (target, thisArg, args) {
+//     const isModel = relStore.has(model[relSymbol])
+//     if (!isModel) {
+//       model()
+//     }
+//     return {
+//       type: model[nameSymbol]
+//       parent,
+//       children: null
+//     }
+//   }
+// })
+//
+// const parentRelHandler = includes => (prop, value) => includes[prop] = value
+// const parentSniffer = fn => {
+//   const handler = target => {
+//     const runEffect = once(fn)
+//     return prop => {
+//       const value = target[prop]
+//       runEffect(prop, value)
+//       return handler(value)
+//     }
+//   )
+//   return handler
+// }
+//
+// const p = parentSniffer(parentRelHandler(includes))(target)
+//
+// const inc = initModel => (includes, handler) => incHelper(
+//   includes,
+//   handler(connector2(initModel))
+// )
+//
+// const incHelper = (includes, relationships) => {
+//   const handlers = Object.entries(relationships)
+//     .map(([ rel, model ]) => {
+//       const i = includes[rel] = includes[rel] ?? {}
+//       const { type, parent children } = model()
+//       return item => {
+//         const connections = allRelationships[parent].activeDocuments[item]?.[rel]
+//         if (connections == null) return // TODO: investigate connections.length
+//         for (const record of store[type]?.getActiveDocuments(...connections)) {
+//           i[item.document.id] = record
+//         }
+//       }
+//     })
+//     return item => {
+//       handlers.forEach(handler => handler(item))
+//     }
+// }
+//
+// const connector = model => new Proxy(noop, {
+//   get (target, prop) {
+//     if (prop === relSymbol) {
+//       return relStore.has(model[relSymbol])
+//     }
+//     if (prop === parentSymbol) {
+//       return parent
+//     }
+//     if (model.hasOwnProperty(prop)) {
+//       const value = model[prop]
+//       return typeof value === "function" ? connector(value, model[nameSymbol]) : value
+//     }
+//     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
+//     return
+//   },
+//   apply (target, thisArg, args) {
+//     return model.apply(thisArg, args)
+//   }
+// })
 
 const isPublished = Symbol("isPublished")
 const isArchived = Symbol("isArchived")
 const documentId = Symbol("documentId")
 const revisionId = Symbol("revisionId")
-const parentSymbol = Symbol("parent")
-const relSymbol = Symbol("rel")
+// const parentSymbol = Symbol("parent")
+// const relSymbol = Symbol("rel")
 
 const allRelationships = globalThis.relationships = {}
 const relStore = new Map()
@@ -63,7 +195,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const initializer = []
   const finalizer = []
   const validatorPrototype = {}
-
+  storeHelpers.include2 = (handler, includes) => {
+    return handler(includeProxy(include), modelProxy(typeInit, includes))
+  }
   storeHelpers.include = (includes, relations) => {
     for (const rel of relations) {
       includes[rel] = {}
@@ -84,61 +218,61 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       return item
     }
   }
-
-  const createIncludeHandlers = (includes, relationships) =>
-    relationships.map(([ rel, model ]) => {
-      includes[rel] = includes[rel] || {}
-      if (!relStore.has(model[relSymbol])) {
-        return includeHandler(model, includes)
-      }
-      const type = model[nameSymbol]
-      const parent = model[parentSymbol]
-      return item => {
-        const connections = allRelationships[parent].activeDocuments[item]?.[rel]
-        if (connections == null) return // TODO: investigate connections.length
-        for (const record of store[type]?.getActiveDocuments(...connections)) {
-          includes[rel][record.document.id] = record
-        }
-      }
-    })
-
-  const includeHandler = (handler, includes, ...connectedModel) => {
-    const relationships = Object.entries(handler(...connectedModel))
-    const handlers = createIncludeHandlers(includes, relationships)
-    return item => {
-      for (const insert of handlers) {
-        insert(item)
-      }
-    }
-  }
-
-  storeHelpers.include3 = (handler, includes) =>
-    includeHandler(handler, includes, connector(typeInit, typeInit[nameSymbol]))
-
-  storeHelpers.include2 = (includes, handler, children) => {
-    const relations = Object.entries(handler(connector(modelInit)))
-    for (const [ rel, model ] of relations) {
-      includes[rel] = includes[rel] || {}
-      relStore.has(model)
-    }
-    return item => {
-      // this logic needs to be tested with hasOne examples
-      // it mightm be the case that this is completely fine
-      // or that this logic needs to be updated to handle
-      // single item connections
-      for (const [ rel, model ] of relations) {
-        const connections = activeDocuments[item]?.[rel]
-        if (connections == null || !connections.length) continue // TODO: investigate connections.length
-        const relModelName = schema[rel][nameSymbol]
-        for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
-          includes[rel][record.document.id] = record
-        }
-        handler?.(record.document.id)
-      }
-      // return item // TODO: see if commenting out this breaks existing logic
-    }
-  }
-
+  //
+  // const createIncludeHandlers = (includes, relationships) =>
+  //   relationships.map(([ rel, model ]) => {
+  //     includes[rel] = includes[rel] || {}
+  //     if (!model[relSymbol]) {
+  //       return includeHandler(model, includes)
+  //     }
+  //     const type = model[nameSymbol]
+  //     const parent = model[parentSymbol]
+  //     return item => {
+  //       const connections = allRelationships[parent].activeDocuments[item]?.[rel]
+  //       if (connections == null) return // TODO: investigate connections.length
+  //       for (const record of store[type]?.getActiveDocuments(...connections)) {
+  //         includes[rel][record.document.id] = record
+  //       }
+  //     }
+  //   })
+  //
+  // const includeHandler = (handler, includes, ...connectedModel) => {
+  //   const relationships = Object.entries(handler(...connectedModel))
+  //   const handlers = createIncludeHandlers(includes, relationships)
+  //   return item => {
+  //     for (const insert of handlers) {
+  //       insert(item)
+  //     }
+  //   }
+  // }
+  //
+  // storeHelpers.include3 = (handler, includes) =>
+  //   includeHandler(handler, includes, connector(typeInit, typeInit[nameSymbol]))
+  //
+  // storeHelpers.include2 = (includes, handler, children) => {
+  //   const relations = Object.entries(handler(connector(modelInit)))
+  //   for (const [ rel, model ] of relations) {
+  //     includes[rel] = includes[rel] || {}
+  //     relStore.has(model)
+  //   }
+  //   return item => {
+  //     // this logic needs to be tested with hasOne examples
+  //     // it mightm be the case that this is completely fine
+  //     // or that this logic needs to be updated to handle
+  //     // single item connections
+  //     for (const [ rel, model ] of relations) {
+  //       const connections = activeDocuments[item]?.[rel]
+  //       if (connections == null || !connections.length) continue // TODO: investigate connections.length
+  //       const relModelName = schema[rel][nameSymbol]
+  //       for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
+  //         includes[rel][record.document.id] = record
+  //       }
+  //       handler?.(record.document.id)
+  //     }
+  //     // return item // TODO: see if commenting out this breaks existing logic
+  //   }
+  // }
+  //
   storeHelpers.addRelation = (name, methods) => {
     validatorPrototype[name] = methods
   }
@@ -151,11 +285,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       [revisionId]: { value: revId }
       // [rel]: { value: {} }
     })
-    initializer.forEach(apply(validatedModel))
+    initializer.forEach(applyContext(validatedModel))
   }
 
   storeHelpers.releaseModel = () => {
-    finalizer.forEach(apply(validatedModel))
+    finalizer.forEach(applyContext(validatedModel))
     validatedModel = null
   }
 

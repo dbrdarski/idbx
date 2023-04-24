@@ -127,17 +127,17 @@ export function render (parent, vdom) {
   return el
 }
 
-// export const once = fn => {
-//   let done = false
-//   let value
-//   return () => {
-//     if (!done) {
-//       value = fn()
-//       done = true
-//     }
-//     return value
-//   }
-// }
+export const once = fn => {
+  let done = false
+  let value
+  return () => {
+    if (!done) {
+      value = fn()
+      done = true
+    }
+    return value
+  }
+}
 //
 // export const lazy = (fn, ...opts) => {
 //   let done = false
