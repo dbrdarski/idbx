@@ -19,7 +19,7 @@ const setter = (includes, rel) => {
 
 const recorder = (set, rel, type, handler, id) => {
   const connections = activeDocuments[id]?.[rel]
-  if (connections == null) continue // TODO: investigate connections.length
+  if (connections == null) return // TODO: investigate connections.length
     for (const record of store[type]?.getActiveDocuments(...connections)) {
       set(record)
     }
