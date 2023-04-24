@@ -127,7 +127,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const finalizer = []
   const validatorPrototype = {}
   storeHelpers.include2 = (handler, includes) => {
-    return handler(includeProxy(includes), modelProxy(typeInit, includes))
+    return handler(includeProxy(includes), modelProxy(typeInit, includes, typeInit[nameSymbol]))
   }
   storeHelpers.include = (includes, relations) => {
     for (const rel of relations) {
