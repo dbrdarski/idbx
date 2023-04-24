@@ -12,92 +12,10 @@ const apply = fn => fn()
 // const isModel = Symbol("isModel")
 const noop = () => {}
 
-// const connector2 = (model, parent) => new Proxy(noop, {
-//   get (target, prop) {
-//     if (model.hasOwnProperty(prop)) {
-//       const value = model[prop]
-//       return typeof value === "function" ? connector2(value, model[nameSymbol]) : value
-//     }
-//     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
-//     return
-//   },
-//   apply (target, thisArg, args) {
-//     const isModel = relStore.has(model[relSymbol])
-//     if (!isModel) {
-//       model()
-//     }
-//     return {
-//       type: model[nameSymbol]
-//       parent,
-//       children: null
-//     }
-//   }
-// })
-//
-// const parentRelHandler = includes => (prop, value) => includes[prop] = value
-// const parentSniffer = fn => {
-//   const handler = target => {
-//     const runEffect = once(fn)
-//     return prop => {
-//       const value = target[prop]
-//       runEffect(prop, value)
-//       return handler(value)
-//     }
-//   )
-//   return handler
-// }
-//
-// const p = parentSniffer(parentRelHandler(includes))(target)
-//
-// const inc = initModel => (includes, handler) => incHelper(
-//   includes,
-//   handler(connector2(initModel))
-// )
-//
-// const incHelper = (includes, relationships) => {
-//   const handlers = Object.entries(relationships)
-//     .map(([ rel, model ]) => {
-//       const i = includes[rel] = includes[rel] ?? {}
-//       const { type, parent children } = model()
-//       return item => {
-//         const connections = allRelationships[parent].activeDocuments[item]?.[rel]
-//         if (connections == null) return // TODO: investigate connections.length
-//         for (const record of store[type]?.getActiveDocuments(...connections)) {
-//           i[item.document.id] = record
-//         }
-//       }
-//     })
-//     return item => {
-//       handlers.forEach(handler => handler(item))
-//     }
-// }
-//
-// const connector = model => new Proxy(noop, {
-//   get (target, prop) {
-//     if (prop === relSymbol) {
-//       return relStore.has(model[relSymbol])
-//     }
-//     if (prop === parentSymbol) {
-//       return parent
-//     }
-//     if (model.hasOwnProperty(prop)) {
-//       const value = model[prop]
-//       return typeof value === "function" ? connector(value, model[nameSymbol]) : value
-//     }
-//     console.error(Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`))
-//     return
-//   },
-//   apply (target, thisArg, args) {
-//     return model.apply(thisArg, args)
-//   }
-// })
-
 const isPublished = Symbol("isPublished")
 const isArchived = Symbol("isArchived")
 const documentId = Symbol("documentId")
 const revisionId = Symbol("revisionId")
-// const parentSymbol = Symbol("parent")
-// const relSymbol = Symbol("rel")
 
 const allRelationships = globalThis.relationships = {}
 const relStore = new Map()
@@ -157,14 +75,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 
   const recorder = (set, rel, type, parentName, handler, id) => {
     const connections = allRelationships[parentName].activeDocuments[id]?.[rel]
-    connections == null && console.log({ type, id, rel, allRelationships })
-    console.log({ connections })
     if (connections == null) return // TODO: investigate connections.length
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
-        const child = handler?.(record.document.id)
-        console.log({ child, handler, record })
-        // const child = ?.(id)
+        handler?.(record.document.id)
       }
   }
 
@@ -188,13 +102,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const modelProxy = (model, includes, parentName, parentRel) => {
-    // console.log("CREATE", { model, parentName, parentRel })
     let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
-        // console.log("GET", model, prop, parentName, parentRel)
-        // if (prop === isModel)
-        //   return relStore.has(model)
         if (!prop in model) {
           console.error(
             Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
@@ -207,7 +117,6 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           : value
       },
       apply (_, thisArg, fns) {
-        // console.log("APPLY", model, parentName, parentRel)
         if (fns.length) {
           let set, childrenHandler
           fns.forEach(fn => {
