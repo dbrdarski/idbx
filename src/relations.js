@@ -160,8 +160,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     if (connections == null) return // TODO: investigate connections.length
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
-        handler?.(record.document.id)
       }
+      handler?.(id)
   }
 
   const includeProxy = (includes) => {
