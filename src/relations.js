@@ -176,7 +176,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         const handlers = models.map(apply)
         return item => {
           for (const handler of handlers) {
-            handler(item)
+            handler?.(item)
           }
         }
       }
@@ -213,7 +213,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           })
           set = set ?? setter(includes, parentRel)
           console.log({ set, childrenHandler })
-          return recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
+          return () => recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
         } else {
           const set = setter(includes, parentRel)
           return recorder.bind(null, set, parentRel, model[nameSymbol], null)
