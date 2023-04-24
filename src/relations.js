@@ -156,8 +156,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const recorder = (set, rel, type, handler, id) => {
-    console.log(allRelationships, { type })
     const connections = allRelationships[type].activeDocuments[id]?.[rel]
+    connections == null && console.log(allRelationships, { type })
     if (connections == null) return // TODO: investigate connections.length
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
@@ -176,10 +176,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       apply (_, thisArg, models) {
         // this is $()
         const handlers = models.map(apply)
-        console.log({ models, handlers, _, thisArg })
         return item => {
           for (const handler of handlers) {
-            console.log(handler)
             handler(item)
           }
         }
@@ -216,7 +214,6 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
             }
           })
           set = set ?? setter(includes, parentRel)
-          console.log({ set, childrenHandler })
           return () => recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
         } else {
           const set = setter(includes, parentRel)
