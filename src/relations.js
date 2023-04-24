@@ -161,7 +161,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
         const child = handler?.(record.document.id)
-        console.log({ child, handler })
+        console.log({ child, handler, record })
         // const child = ?.(id)
       }
   }
