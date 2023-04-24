@@ -161,7 +161,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
       }
-      handler?.(id)
+      const child = handler?.(id)
+      xonsole.log({ child, handler })
   }
 
   const includeProxy = (includes) => {
