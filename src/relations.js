@@ -155,8 +155,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     return item => path[item.document.id] = item
   }
 
-  const recorder = (set, rel, type, handler, id) => {
-    const connections = allRelationships[type].activeDocuments[id]?.[rel]
+  const recorder = (set, rel, type, parentName, handler, id) => {
+    const connections = allRelationships[parentName].activeDocuments[id]?.[rel]
     connections == null && console.log({ type, id, rel, allRelationships })
     console.log({ connections })
     if (connections == null) return // TODO: investigate connections.length
@@ -218,10 +218,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
             }
           })
           set = set ?? setter(includes, parentRel)
-          return () => recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
+          return () => recorder.bind(null, set, parentRel, model[nameSymbol], parentName, childrenHandler)
         } else {
           const set = setter(includes, parentRel)
-          return recorder.bind(null, set, parentRel, model[nameSymbol], null)
+          return recorder.bind(null, set, parentRel, model[nameSymbol], parentName, null)
         }
       }
     })
