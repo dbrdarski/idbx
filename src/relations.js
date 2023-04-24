@@ -190,6 +190,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
+        console.log("GET", model, prop, parentName, parentRel)
         // if (prop === isModel)
         //   return relStore.has(model)
         if (!prop in model) {
