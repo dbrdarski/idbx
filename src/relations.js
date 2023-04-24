@@ -156,7 +156,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const recorder = (set, rel, type, handler, id) => {
-    const connections = activeDocuments[id]?.[rel]
+    const connections = store[type][id]?.[rel]
     if (connections == null) return // TODO: investigate connections.length
       for (const record of store[type]?.getActiveDocuments(...connections)) {
         set(record)
