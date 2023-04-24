@@ -12,75 +12,6 @@ const apply = fn => fn()
 // const isModel = Symbol("isModel")
 const noop = () => {}
 
-const setter = (includes, rel) => {
-  const path = includes[rel] = includes[rel] || {}
-  return item => path[item.document.id] = item
-}
-
-const recorder = (set, rel, type, handler, id) => {
-  const connections = activeDocuments[id]?.[rel]
-  if (connections == null) return // TODO: investigate connections.length
-    for (const record of store[type]?.getActiveDocuments(...connections)) {
-      set(record)
-    }
-  handler?.(record.document.id)
-}
-
-const includeProxy = (includes) => {
-  const proxy = new Proxy(noop, {
-    get (_, prop) {
-      // this is $.tag
-      return setter.bind(null, includes, prop)
-    },
-    apply (_, thisArg, models) {
-      // this is $()
-      const handlers = models.map(apply)
-      return item => {
-        for (const handler of handlers) {
-          handler(item)
-        }
-      }
-    }
-  })
-  return proxy
-}
-
-const modelProxy = (model, includes, parentName, parentRel) => {
-  let rel, dataHandler
-  const proxy = new Proxy(noop, {
-    get (_, prop) {
-      // if (prop === isModel)
-      //   return relStore.has(model)
-      if (!prop in model) {
-        console.error(
-          Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
-        )
-        return
-      }
-      const value = model[prop]
-      return relStore.has(value)
-        ? modelProxy(value, includes, model[nameSymbol], prop)
-        : value
-    },
-    apply (_, thisArg, fns) {
-      if (fns.length) {
-        let set, childrenHandler
-        fns.forEach(fn => {
-          if (fn.length) {
-            childrenHandler = fn(proxy)
-          } else {
-            set = fn()
-          }
-        })
-        return recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
-      } else {
-        const set = setter(includes, parentRel)
-        return recorder.bind(null, set, parentRel, model[nameSymbol], null)
-      }
-    }
-  })
-  return proxy
-}
 // const connector2 = (model, parent) => new Proxy(noop, {
 //   get (target, prop) {
 //     if (model.hasOwnProperty(prop)) {
@@ -218,61 +149,77 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       return item
     }
   }
-  //
-  // const createIncludeHandlers = (includes, relationships) =>
-  //   relationships.map(([ rel, model ]) => {
-  //     includes[rel] = includes[rel] || {}
-  //     if (!model[relSymbol]) {
-  //       return includeHandler(model, includes)
-  //     }
-  //     const type = model[nameSymbol]
-  //     const parent = model[parentSymbol]
-  //     return item => {
-  //       const connections = allRelationships[parent].activeDocuments[item]?.[rel]
-  //       if (connections == null) return // TODO: investigate connections.length
-  //       for (const record of store[type]?.getActiveDocuments(...connections)) {
-  //         includes[rel][record.document.id] = record
-  //       }
-  //     }
-  //   })
-  //
-  // const includeHandler = (handler, includes, ...connectedModel) => {
-  //   const relationships = Object.entries(handler(...connectedModel))
-  //   const handlers = createIncludeHandlers(includes, relationships)
-  //   return item => {
-  //     for (const insert of handlers) {
-  //       insert(item)
-  //     }
-  //   }
-  // }
-  //
-  // storeHelpers.include3 = (handler, includes) =>
-  //   includeHandler(handler, includes, connector(typeInit, typeInit[nameSymbol]))
-  //
-  // storeHelpers.include2 = (includes, handler, children) => {
-  //   const relations = Object.entries(handler(connector(modelInit)))
-  //   for (const [ rel, model ] of relations) {
-  //     includes[rel] = includes[rel] || {}
-  //     relStore.has(model)
-  //   }
-  //   return item => {
-  //     // this logic needs to be tested with hasOne examples
-  //     // it mightm be the case that this is completely fine
-  //     // or that this logic needs to be updated to handle
-  //     // single item connections
-  //     for (const [ rel, model ] of relations) {
-  //       const connections = activeDocuments[item]?.[rel]
-  //       if (connections == null || !connections.length) continue // TODO: investigate connections.length
-  //       const relModelName = schema[rel][nameSymbol]
-  //       for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
-  //         includes[rel][record.document.id] = record
-  //       }
-  //       handler?.(record.document.id)
-  //     }
-  //     // return item // TODO: see if commenting out this breaks existing logic
-  //   }
-  // }
-  //
+
+  const setter = (includes, rel) => {
+    const path = includes[rel] = includes[rel] || {}
+    return item => path[item.document.id] = item
+  }
+
+  const recorder = (set, rel, type, handler, id) => {
+    const connections = activeDocuments[id]?.[rel]
+    if (connections == null) return // TODO: investigate connections.length
+      for (const record of store[type]?.getActiveDocuments(...connections)) {
+        set(record)
+      }
+    handler?.(record.document.id)
+  }
+
+  const includeProxy = (includes) => {
+    const proxy = new Proxy(noop, {
+      get (_, prop) {
+        // this is $.tag
+        return setter.bind(null, includes, prop)
+      },
+      apply (_, thisArg, models) {
+        // this is $()
+        const handlers = models.map(apply)
+        return item => {
+          for (const handler of handlers) {
+            handler(item)
+          }
+        }
+      }
+    })
+    return proxy
+  }
+
+  const modelProxy = (model, includes, parentName, parentRel) => {
+    let rel, dataHandler
+    const proxy = new Proxy(noop, {
+      get (_, prop) {
+        // if (prop === isModel)
+        //   return relStore.has(model)
+        if (!prop in model) {
+          console.error(
+            Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
+          )
+          return
+        }
+        const value = model[prop]
+        return relStore.has(value)
+          ? modelProxy(value, includes, model[nameSymbol], prop)
+          : value
+      },
+      apply (_, thisArg, fns) {
+        if (fns.length) {
+          let set, childrenHandler
+          fns.forEach(fn => {
+            if (fn.length) {
+              childrenHandler = fn(proxy)
+            } else {
+              set = fn()
+            }
+          })
+          return recorder.bind(null, set, parentRel, model[nameSymbol], childrenHandler)
+        } else {
+          const set = setter(includes, parentRel)
+          return recorder.bind(null, set, parentRel, model[nameSymbol], null)
+        }
+      }
+    })
+    return proxy
+  }
+
   storeHelpers.addRelation = (name, methods) => {
     validatorPrototype[name] = methods
   }
