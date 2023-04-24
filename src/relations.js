@@ -162,7 +162,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         set(record)
       }
       const child = handler?.(id)
-      xonsole.log({ child, handler })
+      console.log({ child, handler })
   }
 
   const includeProxy = (includes) => {
