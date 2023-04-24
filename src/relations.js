@@ -178,7 +178,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         return item => {
           for (const handler of handlers) {
             console.log(handler)
-            handler?.(item)
+            handler(item)
           }
         }
       }
