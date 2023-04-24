@@ -204,6 +204,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           : value
       },
       apply (_, thisArg, fns) {
+        console.log("APPLY", model, parentName, parentRel)
         if (fns.length) {
           let set, childrenHandler
           fns.forEach(fn => {
