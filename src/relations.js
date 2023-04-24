@@ -187,7 +187,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const modelProxy = (model, includes, parentName, parentRel) => {
-    console.log("CREATE", model, parentName, parentRel)
+    console.log("CREATE", { model, parentName, parentRel })
     let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
