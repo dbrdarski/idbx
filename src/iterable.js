@@ -5,8 +5,8 @@ const inc = x => x + 1
 const key = (_, k) => k
 const noop = () => {}
 
-// TODO: reimplement include recursively
-// reimplement relationships on a data
+// TODO: reimplement include recursively -> DONE
+// reimplement relationships on a data() -> DONE
 
 export default (store, storeHelpers) => {
   class Query {
@@ -52,44 +52,21 @@ export default (store, storeHelpers) => {
         map(this.#iterator, key)
       )
     }
+    // data (fn) {
+    //   return collect(
+    //     fn
+    //       ? map(this.#iterator, fn)
+    //       : this.#iterator
+    //     )
+    // }
     data (fn) {
-      return collect(
-        fn
-          ? map(this.#iterator, fn)
-          : this.#iterator
-        )
-    }
-    data2 (fn) {
-      const relationships = this.#query.relationships
-      const includes = relationships && {}
-      const iterator = relationships
-        ? include(
-          this.#iterator,
-          storeHelpers.include(includes, relationships)
-        )
-        : this.#iterator
-      const data = collect(
-        fn
-          ? map(iterator, fn)
-          : iterator
-        )
-      if (relationships) {
-        delete this.#query.relationships
-        this.#query.includes = includes
-      }
-      return {
-        data,
-        ...this.#query
-      }
-    }
-    data3 (fn) {
-      const relationships = this.#query.includer
+      const relationships = this.#query.includeHandlers
       const [ def ] = relationships
       const includes = relationships && {}
       const iterator = relationships
         ? include(
           this.#iterator,
-          storeHelpers.include2(def, includes)
+          storeHelpers.include(def, includes)
         )
         : this.#iterator
       const data = collect(
@@ -98,7 +75,7 @@ export default (store, storeHelpers) => {
           : iterator
         )
       if (relationships) {
-        delete this.#query.includer
+        delete this.#query.includeHandlers
         this.#query.includes = includes
       }
       return {
@@ -134,22 +111,8 @@ export default (store, storeHelpers) => {
         )
         : this
     }
-    include (...relationships) {
-      return relationships.length
-        ? new Query(
-          {
-            ...this.#query,
-            relationships: new Set([
-              ...this.#query.relationships ?? [],
-              ...relationships
-            ])
-          },
-          this.#iterator
-        )
-        : this
-    }
-    include2 (fn) {
-      fn && (this.#query.includer = (this.#query.includer ?? new Set).add(fn))
+    include (fn) {
+      fn && (this.#query.includeHandlers = (this.#query.includeHandlers ?? new Set).add(fn))
       return this
     }
   }

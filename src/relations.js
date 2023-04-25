@@ -44,35 +44,13 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const initializer = []
   const finalizer = []
   const validatorPrototype = {}
-  storeHelpers.include2 = (handler, includes) => {
+  storeHelpers.include = (handler, includes) => {
     return handler(includeProxy(includes), modelProxy(typeInit, includes, typeInit[nameSymbol]))
   }
-  storeHelpers.include = (includes, relations) => {
-    for (const rel of relations) {
-      includes[rel] = {}
-    }
-    return item => {
-      // this logic needs to be tested with hasOne examples
-      // it mightm be the case that this is completely fine
-      // or that this logic needs to be updated to handle
-      // single item connections
-      for (const rel of relations) {
-        const connections = activeDocuments[item]?.[rel]
-        if (connections == null || !connections.length) continue // TODO: investigate connections.length
-        const relModelName = schema[rel][nameSymbol]
-        for (const record of store[relModelName]?.getActiveDocuments(...connections)) {
-          includes[rel][record.document.id] = record
-        }
-      }
-      return item
-    }
-  }
-
   const setter = (includes, rel) => {
     const path = includes[rel] = includes[rel] || {}
     return item => path[item.document.id] = item
   }
-
   const recorder = (set, rel, type, parentName, handler, id) => {
     const connections = allRelationships[parentName].activeDocuments[id]?.[rel]
     if (connections == null) return // TODO: investigate connections.length
@@ -81,15 +59,12 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         handler?.(record.document.id)
       }
   }
-
   const includeProxy = (includes) => {
     const proxy = new Proxy(noop, {
       get (_, prop) {
-        // this is $.tag
         return setter.bind(null, includes, prop)
       },
       apply (_, thisArg, models) {
-        // this is $()
         const handlers = models.map(apply)
         return item => {
           for (const handler of handlers) {
@@ -100,9 +75,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     })
     return proxy
   }
-
   const modelProxy = (model, includes, parentName, parentRel) => {
-    let rel, dataHandler
     const proxy = new Proxy(noop, {
       get (_, prop) {
         if (!prop in model) {
@@ -113,7 +86,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         }
         const value = model[prop]
         return relStore.has(value)
-          ? modelProxy(value, includes, model[nameSymbol], prop)
+          ? modelProxy(value, includes, model[nameSymbol], prop) // TODO: think if we need this (relStore) -> type === "function"
           : value
       },
       apply (_, thisArg, fns) {
@@ -324,10 +297,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 }
 
 // Two big tasks ahead:
-// 1. Firugre out associations
+// 1. Firugre out associations - DONE
 // 2. Figure out new type for handling document status: { id: UUID(document), pubished: UUID(revision), archived: Boolean }
 // Bonus:
-// add assoc related query methods (like include)
-// assoc filtering doc vs revision
-// + archived docs in assoc filtering
+// add assoc related query methods (like include)  - DONE
+// assoc filtering doc vs revision - DONE (only doc)
+// + archived docs in assoc filtering - DONE
 // + filtering in normal getters

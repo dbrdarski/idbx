@@ -123,7 +123,6 @@ export const generateSetters = (instance, store, methods, type, initType) => {
   const idbx = globalThis.idbx = globalThis.idbx ?? {}
   store[type].validate = idbx[type] = validate
   methods[type].createDocument = (data, publish) => {
-    // console.log({ data, publish })
     return instance.save({ type, data, publish })
   }
   methods[type].createRevision = function (id, data, from, publish) {
