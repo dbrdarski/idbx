@@ -60,17 +60,17 @@ export const initDocument = (instance, init) => {
       }
     },
     serializer: write => (record) => {
-      const { document, revision, record, archived, published } = record
+      const { document, revision, data, archived, published } = record
       // console.log({ revision })
       store[document.type].selectModel(document.id, revision.id, published, archived)
-      const validation = store[document.type].validate(record)
+      const validation = store[document.type].validate(data)
       if (!validation) throw Error("Validation failed")
       const documentKey = documentStore.getKey(write)(document)
       store[document.type].createRecord(document.id, record)
       store[document.type].createDocumentGetters(document)
 
       const revisionKey = objectStore.getKey(write)(revision)
-      const dataKey = objectStore.getKey(write)(record)
+      const dataKey = objectStore.getKey(write)(data)
       const archivedValue = matchType(write)(archived)
       store[document.type].releaseModel()
       return `(${documentKey}${revisionKey}${dataKey}${archivedValue})`
@@ -121,7 +121,7 @@ export const initDocument = (instance, init) => {
       case "record": {
         const [ document, revision, data, archived ] = matches.map(parseToken)
         // console.log({ document, revision, record, meta, archived })
-        const record = { document, revision, record: data, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
+        const record = { document, revision, data, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
         recordStore.getKey(write)(record)
         return record
       }
