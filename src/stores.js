@@ -60,6 +60,7 @@ export const initDocument = (instance, init) => {
       }
     },
     serializer: write => (record, create) => {
+      console.log({ record, create })
       const { document, revision, data, archived, published } = record
       // console.log({ revision })
       if (create) {
