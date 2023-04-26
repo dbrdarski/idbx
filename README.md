@@ -4,7 +4,7 @@ A JavaScript Content Repository
 
 ### Roadmap
 
-* to 0.1.0
+* 0.1.0
   - figure out queries findOne & find({ active, published, archived })
   - introduce changes to document structure data -> record etc
 * 0.1.1
@@ -19,3 +19,5 @@ A JavaScript Content Repository
   - implement (lazy) sorting
 * 0.2.0
   - refactor code
+* 0.2.1
+- implement Babel transforms for .jsr files

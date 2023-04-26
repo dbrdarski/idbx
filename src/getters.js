@@ -40,6 +40,19 @@ export const generateGetters = (instance, store, methods, type) => {
         }
       }
     },
+    createDocumentGetters (document) {
+      const { id } = document
+      Object.defineProperties(document, {
+        publised: {
+          enumerable: true,
+          get: () => documents.byId[id].active != null
+        },
+        archived: {
+          enumerable: true,
+          get: () => documents.byId[id].archived
+        }
+      })
+    },
     createRecord (documentId, record) {
       // console.log("CREATE RECORD", id, record)
       const { id } = record.revision
@@ -51,7 +64,7 @@ export const generateGetters = (instance, store, methods, type) => {
         records.publications.push(id)
         document.records.publications.push(id)
       }
-      document.active = record.revision.published = record.revision.published || document.active
+      document.active = record.revision.published ? record.revision.id : document.active
       document.archived = record.archived
       document.latest = record.revision.id
     }

@@ -38,7 +38,7 @@ export const initDocument = (instance, init) => {
 
   const recordStore = createStore({
     SymbolType: RecordSymbol,
-    handler ({ type, id, data, meta, from, publish = false, archived = false }) {
+    handler ({ type, id, data: record, meta: { user, timestamp }, from, publish: published = false, archived = false }) {
       if (!id) {
         id = generateUUID()
       }
@@ -48,30 +48,32 @@ export const initDocument = (instance, init) => {
         document,
         revision: {
           id: revision,
+          user,
+          timestamp,
           from,
-          published: publish ? revision : null,
+          published, // publish ? revision : null,
+          archived
         },
-        meta,
-        data,
+        record,
         archived,
-        publish
+        published
       }
     },
     serializer: write => (record) => {
-      const { document, revision, data, meta, archived, publish } = record
+      const { document, revision, record, archived, published } = record
       // console.log({ revision })
-      store[document.type].selectModel(document.id, revision.id, publish, archived)
-      const validation = store[document.type].validate(data)
+      store[document.type].selectModel(document.id, revision.id, published, archived)
+      const validation = store[document.type].validate(record)
       if (!validation) throw Error("Validation failed")
       const documentKey = documentStore.getKey(write)(document)
       store[document.type].createRecord(document.id, record)
+      store[document.type].createDocumentGetters(document)
 
       const revisionKey = objectStore.getKey(write)(revision)
-      const dataKey = objectStore.getKey(write)(data)
-      const metaKey = objectStore.getKey(write)(meta)
+      const dataKey = objectStore.getKey(write)(record)
       const archivedValue = matchType(write)(archived)
       store[document.type].releaseModel()
-      return `(${documentKey}${revisionKey}${dataKey}${metaKey}${archivedValue})`
+      return `(${documentKey}${revisionKey}${dataKey}${archivedValue})`
     }
   })
 
@@ -117,9 +119,9 @@ export const initDocument = (instance, init) => {
         return object
       }
       case "record": {
-        const [ document, revision, data, meta, archived ] = matches.map(parseToken)
-        // console.log({ document, revision, data, meta, archived })
-        const record = { document, revision, data, meta, archived, publish: true }
+        const [ document, revision, record, archived ] = matches.map(parseToken)
+        // console.log({ document, revision, record, meta, archived })
+        const record = { document, revision, record, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
         recordStore.getKey(write)(record)
         return record
       }
