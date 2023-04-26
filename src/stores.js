@@ -38,7 +38,7 @@ export const initDocument = (instance, init) => {
 
   const recordStore = createStore({
     SymbolType: RecordSymbol,
-    handler ({ type, id, data: record, meta: { user, timestamp }, from, publish: published = false, archived = false }) {
+    handler ({ type, id, data, meta: { user, timestamp }, from, publish: published = false, archived = false }) {
       if (!id) {
         id = generateUUID()
       }
@@ -54,7 +54,7 @@ export const initDocument = (instance, init) => {
           published, // publish ? revision : null,
           archived
         },
-        record,
+        data,
         archived,
         published
       }
