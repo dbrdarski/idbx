@@ -1,9 +1,9 @@
 # IDBX project
 A JavaScript Content Repository
-##a.k.a. 0xBASE
-##a.k.a LynxDB
+## a.k.a. 0xBASE
+## a.k.a LynxDB
 
-###Roadmap
+### Roadmap
 
 * to 0.1.0
 - figure out queries findOne & find({ active, published, archived })
@@ -18,3 +18,5 @@ A JavaScript Content Repository
 - implement fork method on iterator
 * 0.1.5
 - implement (lazy) sorting
+* 0.2.0
+- refactor code
