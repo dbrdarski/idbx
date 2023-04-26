@@ -21,7 +21,6 @@ export const initDocument = (instance, init) => {
   const objectStore = createStore({
     SymbolType: ObjectSymbol,
     serializer: write => value => {
-      console.log("HERE", value)
       const [ keys, values ] = serializeObject(value).map(matchType(write))
       return `{${keys}${values}}`
     }
@@ -61,7 +60,6 @@ export const initDocument = (instance, init) => {
       }
     },
     serializer: write => (record, create) => {
-      console.log({ record, create })
       const { document, revision, record: data, archived, published } = record
       // console.log({ revision })
       // if (create) {
@@ -71,7 +69,7 @@ export const initDocument = (instance, init) => {
       // }
       const documentKey = documentStore.getKey(write)(document)
       store[document.type].createRecord(document.id, record)
-      create && store[document.type].createDocumentGetters(document)
+      store[document.type].createDocumentGetters(document)
 
       const revisionKey = objectStore.getKey(write)(revision)
       const dataKey = objectStore.getKey(write)(data)
@@ -125,7 +123,6 @@ export const initDocument = (instance, init) => {
       case "record": {
         const [ document, revision, data, archived ] = matches.map(parseToken)
         // console.log({ document, revision, record, meta, archived })
-        console.log("READ", { data })
         const record = { document, revision, record: data, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
         recordStore.getKey(write)(record)
         return record
