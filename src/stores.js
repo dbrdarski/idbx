@@ -21,6 +21,7 @@ export const initDocument = (instance, init) => {
   const objectStore = createStore({
     SymbolType: ObjectSymbol,
     serializer: write => value => {
+      console.log("HERE", value)
       const [ keys, values ] = serializeObject(value).map(matchType(write))
       return `{${keys}${values}}`
     }
