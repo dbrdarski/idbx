@@ -119,9 +119,9 @@ export const initDocument = (instance, init) => {
         return object
       }
       case "record": {
-        const [ document, revision, record, archived ] = matches.map(parseToken)
+        const [ document, revision, data, archived ] = matches.map(parseToken)
         // console.log({ document, revision, record, meta, archived })
-        const record = { document, revision, record, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
+        const record = { document, revision, record: data, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
         recordStore.getKey(write)(record)
         return record
       }
