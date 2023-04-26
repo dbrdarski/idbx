@@ -41,9 +41,10 @@ export const generateGetters = (instance, store, methods, type) => {
       }
     },
     createDocumentGetters (document) {
+      console.log({ document })
       const { id } = document
       Object.defineProperties(document, {
-        publised: {
+        published: {
           enumerable: true,
           get: () => documents.byId[id].active != null
         },
