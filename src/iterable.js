@@ -62,6 +62,7 @@ export default (store, storeHelpers) => {
     data (fn) {
       const relationships = this.#query.includeHandlers
       const def = relationships?.[0]
+      console.log(defm relationships)
       const includes = relationships && {}
       const iterator = relationships
         ? include(
