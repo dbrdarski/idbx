@@ -55,14 +55,14 @@ export const initDocument = (instance, init) => {
           published, // publish ? revision : null,
           archived
         },
-        data,
+        record: data,
         archived,
         published
       }
     },
     serializer: write => (record, create) => {
       console.log({ record, create })
-      const { document, revision, data, archived, published } = record
+      const { document, revision, record: data, archived, published } = record
       // console.log({ revision })
       if (create) {
         store[document.type].selectModel(document.id, revision.id, published, archived)
