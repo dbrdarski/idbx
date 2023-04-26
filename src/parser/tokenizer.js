@@ -40,7 +40,7 @@ const string = /"(?:[^"\\]|\\.)*"/
 const basic = RegExp(singleValues)
 const array = RegExp(`\\[(${allValues})*\\]`)
 const object = RegExp(`\\{([A]${allChars}+)([A]${allChars}+)\\}`)
-const record = RegExp(`\\(([D]${allChars}+)([O]${allChars}+)([O]${allChars}+)([O]${allChars}+)([TF])\\)`)
+const record = RegExp(`\\(([D]${allChars}+)([O]${allChars}+)([O]${allChars}+)([TF])\\)`)
 const document = RegExp(`\\<([S]${allChars}+)([S]${allChars}+)\\>`)
 export const allValuesRegex = RegExp(allValues, 'g')
 
