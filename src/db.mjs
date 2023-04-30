@@ -25,7 +25,7 @@ export const repository = adapter => init => {
           ),
           null
         )
-        this.data = window.dbData = result
+        this.data = globalThis.dbData = result
       } catch (e) {
         console.error(e)
       }
