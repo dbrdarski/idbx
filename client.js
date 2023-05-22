@@ -20,7 +20,7 @@ const renderer = target => [
 
 !(async () => {
   // const db = await db.open('pero')
-  // window.db = db
+  // globalThis.db = db
   const schema = () => {
     // define('doc')
     // define('post')
@@ -33,7 +33,7 @@ const renderer = target => [
     class Vdom {
       tag = String
       attrs = Object
-      children = Array(window.$or(Vdom, String))
+      children = Array(globalThis.$or(Vdom, String))
     }
 
     return {
@@ -90,7 +90,7 @@ const renderer = target => [
   const db = repository(browser)
   const repo = db(schema)
   // const r = await repo[localStorage.hasOwnProperty("Pero") ? "open" : "create"]("Pero")
-  const r = window.$ = await repo[localStorage.hasOwnProperty("Blazo") ? "open" : "create"]("Blazo")
+  const r = globalThis.$ = await repo[localStorage.hasOwnProperty("Blazo") ? "open" : "create"]("Blazo")
 
   cezare_borgia_JSON.tag = "div"
   cezare_borgia_JSON.attrs.contenteditable = true
@@ -113,7 +113,7 @@ const renderer = target => [
     })
   }
 
-  Object.assign(window, {
+  Object.assign(globalThis, {
     render,
     r,
     readDOM,
@@ -127,7 +127,7 @@ const renderer = target => [
     macros_article_JSON,
     cezare_borgia_JSON
   })
-  // window.db = db
+  // globalThis.db = db
 })()
 
 console.log(`
@@ -151,7 +151,7 @@ The 'published' and 'archived' properties can be included both in the revision
 and document to actually to distinguish between document and revision state.
 
 payload: {
-  document: { type: String, id: UUID, published: Boolean, archived: Boolean, active: UUID }, 
+  document: { type: String, id: UUID, published: Boolean, archived: Boolean, active: UUID },
   revision: { id: UUID, published: Boolean, archived: Boolean, author: UUID, timestamp: Number }
   record:  { ...data }
 }
