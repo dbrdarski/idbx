@@ -89,7 +89,8 @@ export const generateGetters = (instance, store, methods, type) => {
         records.ids.drafts.push(id)
         document.records.drafts.push(id)
       }
-      document.lastest.active = record.revision.published ? record.revision.id : document.lastest.active
+      console.log(document.latest, document)
+      document.latest.active = record.revision.published ? record.revision.id : document.latest.active
       document.latest.draft = record.revision.published ? document.latest.draft : record.revision.id
       document.archived = record.archived
       document.latest.revision = record.revision.id
