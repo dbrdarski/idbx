@@ -230,6 +230,19 @@ export default (store, storeHelpers) => {
   // const addPostTaxonomy = (taxonomy, ids) =>
   //   post.attach(taxonomy, ...ids)
 
+  // return (data, ids) => {
+  //   const iterator = ids[Symbol.iterator]()
+  //   return new Query(
+  //     {},
+  //     next => {
+  //       const { value: key, done } = iterator.next()
+  //       if (done) return false
+  //       next(data[key], key, data)
+  //       return true
+  //     }
+  //   )
+  // }
+
   return (data, ids) => {
     let i = 0
     return new Query(
