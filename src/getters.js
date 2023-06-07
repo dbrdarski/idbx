@@ -28,8 +28,8 @@ export const generateGetters = (instance, store, methods, type) => {
   store[type] = {
     getActiveDocuments (...ids) {
       return ids.reduce((acc, id) => {
-        const { ids: { active } } = documents.byId[id]
-        active && acc.push(records.byId[active])
+        const { publication } = documents.byId[id]
+        publication && acc.push(records.byId[publication])
         return acc
       }, [])
     },
@@ -67,7 +67,7 @@ export const generateGetters = (instance, store, methods, type) => {
       document.published ?? Object.defineProperties(document, {
         published: {
           enumerable: true,
-          get: () => documents.byId[id].active != null
+          get: () => documents.byId[id].latest.publication != null
         },
         archived: {
           enumerable: true,
@@ -101,7 +101,7 @@ export const generateGetters = (instance, store, methods, type) => {
     getDocuments () {
       return query(
         documents.byId,
-        documents.ids
+        documents.ids.all
       )
     },
     // get().latest({ published: true })
