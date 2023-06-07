@@ -106,8 +106,12 @@ export const generateGetters = (instance, store, methods, type) => {
     },
     // get().latest({ published: true })
     activeRevisions () {
+      return query(
+        documents.byId,
+        documents.ids.active
+      )
       return this.getDocuments()
-        .find(item => item.latest.publication != null)
+        .find(item => item.active != null)
         .map(item => records.byId[item.active])
     },
     // get({ id }).latest({ published: true })
