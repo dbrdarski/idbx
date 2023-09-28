@@ -18,7 +18,7 @@ export default (store, storeHelpers) => {
               ...meta
             }
           },
-          this.#iterator
+          this.value
         )
         : this
     }

@@ -1,5 +1,5 @@
 import iterable from "./iterable.js"
-import queryItem from "./query-item.js"
+import item from "./query-item.js"
 
 export const generateGetters = (instance, store, methods, type) => {
   const documents = {
@@ -106,7 +106,7 @@ export const generateGetters = (instance, store, methods, type) => {
     }
   }
 
-  const queryItem = queryItem(store, store[type], methods)
+  const queryItem = item(store, store[type], methods)
   const queryCollection = iterable(store, store[type], methods)
 
   methods[type] = {
