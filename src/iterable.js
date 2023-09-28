@@ -1,9 +1,9 @@
-const getDocumentId = r => r.document.id
+// const getDocumentId = r => r.document.id
 
 // const add = (x, y) => x + y
 const inc = x => x + 1
 const key = (_, k) => k
-const noop = () => {}
+const noop = () => { }
 
 // TODO: reimplement include recursively -> DONE
 // reimplement relationships on a data() -> DONE
@@ -12,18 +12,18 @@ export default (store, storeHelpers) => {
   class Query {
     #iterator
     #query
-    constructor (query, iterator) {
+    constructor(query, iterator) {
       this.#iterator = iterator
       this.#query = query
     }
-    skip (amount) {
+    skip(amount) {
       return amount
         ? new Query(
           this.#query,
           skip(this.#iterator, amount)
         ) : this
     }
-    limit (amount) {
+    limit(amount) {
       return amount
         ? new Query(
           this.#query,
@@ -31,7 +31,7 @@ export default (store, storeHelpers) => {
         )
         : this
     }
-    map (fn) {
+    map(fn) {
       return fn
         ? new Query(
           this.#query,
@@ -39,52 +39,13 @@ export default (store, storeHelpers) => {
         )
         : this
     }
-    find (fn) {
+    find(fn) {
       return fn
         ? new Query(
           this.#query,
           filter(this.#iterator, fn)
         )
         : this
-    }
-    ids () {
-      return collect(
-        map(this.#iterator, key)
-      )
-    }
-    // data (fn) {
-    //   return collect(
-    //     fn
-    //       ? map(this.#iterator, fn)
-    //       : this.#iterator
-    //     )
-    // }
-    data (fn) {
-      const relationships = this.#query.includeHandlers
-      const [ def ] = relationships ?? []
-      const includes = relationships && {}
-      const iterator = def
-        ? include(
-          this.#iterator,
-          storeHelpers.include(def, includes)
-        )
-        : this.#iterator
-      const data = collect(
-        fn
-          ? map(iterator, fn)
-          : iterator
-        )
-      if (relationships) {
-        delete this.#query.includeHandlers
-        this.#query.includes = includes
-      }
-      return {
-        data,
-        ...this.#query
-      }
-    }
-    count () {
-      return reduce(this.#iterator, inc, 0)
     }
     // [Symbol.iterator]* () {
     //   let value
@@ -97,7 +58,20 @@ export default (store, storeHelpers) => {
     //     yield value
     //   }
     // }
-    meta (meta) {
+    count() {
+      return reduce(this.#iterator, inc, 0)
+    }
+    include(fn) {
+      // should this mutate or return new query?
+      fn && (this.#query.includeHandlers = (this.#query.includeHandlers ?? new Set).add(fn))
+      return this
+    }
+    ids() {
+      return collect(
+        map(this.#iterator, key)
+      )
+    }
+    meta(meta) {
       return (meta && Object.keys(meta).length)
         ? new Query(
           {
@@ -111,22 +85,42 @@ export default (store, storeHelpers) => {
         )
         : this
     }
-    include (fn) {
-      fn && (this.#query.includeHandlers = (this.#query.includeHandlers ?? new Set).add(fn))
-      return this
+    data(fn) {
+      const relationships = this.#query.includeHandlers
+      const [def] = relationships ?? []
+      const includes = relationships && {} // null or {}
+      const iterator = def
+        ? include(
+          this.#iterator,
+          storeHelpers.include(def, includes)
+        )
+        : this.#iterator
+      const data = collect(
+        fn
+          ? map(iterator, fn)
+          : iterator
+      )
+      if (relationships) {
+        delete this.#query.includeHandlers
+        this.#query.includes = includes
+      }
+      return {
+        data,
+        ...this.#query
+      }
     }
   }
 
-  const array = (array) => {
-    let i = 0
-    return next => {
-      if (i < array.length) {
-        next(array[i++], i, array)
-        return true
-      }
-      return false
-    }
-  }
+  // const array = (array) => {
+  //   let i = 0
+  //   return next => {
+  //     if (i < array.length) {
+  //       next(array[i++], i, array)
+  //       return true
+  //     }
+  //     return false
+  //   }
+  // }
 
   const collect = (iterator, ...list) => {
     let proceed = true
@@ -175,7 +169,6 @@ export default (store, storeHelpers) => {
     return acc
   }
 
-
   const skip = (iterator, skip) => {
     let i = 0
     let proceed = true
@@ -213,7 +206,12 @@ export default (store, storeHelpers) => {
   //
   // const searchByTitle = (title, offset, limit) => {
   //   return Post
-  //     .revisions()
+  //     .latest({
+  //        id?,
+  //        status: Post.Status.Archived
+  //      })
+  //     .revision(id)
+  //     .revisions(id?)
   //     .filter(post => post.data.title.includes(title))
   //     .skip(offset)
   //     .limit(offset)
