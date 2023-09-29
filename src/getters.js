@@ -49,28 +49,30 @@ export const generateGetters = (instance, store, methods, type) => {
       if (!documents.all.byId.hasOwnProperty(id)) {
         documents.all.ids.push(id)
         documents.active.ids.push(id)
-        documents.all.byId[id] = {
-          revisions: {
-            ids: [],
-            latest: null
-          },
-          publications: {
-            ids: [],
-            latest: null
-          },
-          drafts: {
-            ids: [],
-            latest: null
-          },
-          // latest: null,
-          // active: null,
-          // draft: null,
-          archived: false
-        }
+        documents.archived.ids.push(id)
+        documents.all.byId[id] =
+          documents.active.byId[id] =
+          documents.archived.byId[id] = {
+            revisions: {
+              ids: [],
+              latest: null
+            },
+            publications: {
+              ids: [],
+              latest: null
+            },
+            drafts: {
+              ids: [],
+              latest: null
+            },
+            // latest: null,
+            // active: null,
+            // draft: null,
+            archived: false
+          }
       }
     },
     createDocumentGetters(document) {
-      // console.log({ document })
       const { id } = document
       document.published ?? Object.defineProperties(document, {
         published: {
@@ -123,7 +125,7 @@ export const generateGetters = (instance, store, methods, type) => {
           documents[status].ids
         ).map(
           item => records.revisions.byId[item[mode].latest]
-        ).filter(
+        ).find(
           item => item != null
         )
       }
