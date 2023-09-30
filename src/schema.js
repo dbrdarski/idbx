@@ -38,7 +38,7 @@ const createSchema = Schema => {
     return validators.get(Schema)
   }
   const validator = target => {
-    const keys = new Set([ ...defKeys, ...Object.keys(target) ])
+    const keys = new Set([...defKeys, ...Object.keys(target)])
 
     if (getType(target) !== "object")
       return false
@@ -60,13 +60,13 @@ const createSchema = Schema => {
   }
   setValidator(Schema, validator)
 
-  const [ defKeys, schema ] = Object.entries(new Schema).reduce(
+  const [defKeys, schema] = Object.entries(new Schema).reduce(
     (acc, [k, v]) => {
       acc[0].push(k)
       acc[1][k] = createValidator(v)
       return acc
     },
-    [[],{}]
+    [[], {}]
   )
   return validator
 }
@@ -82,7 +82,7 @@ const createValidator = (def, validator) => {
   if (validators.has(def)) {
     return validators.get(def)
   } else if (Array.isArray(def)) {
-    [ def ] = def
+    [def] = def
     const validator = validateArray(def, createValidator(def))
     return xs => xs.every(validator)
   } else if (typeof def === "function") {
@@ -120,16 +120,19 @@ const createModelSchema = model => {
 export const generateSetters = (instance, store, methods, type, initType) => {
   // const validate = createSchema(initType.call(relations, {}))
   const validate = createModelSchema(initType())
-  const idbx = globalThis.idbx = globalThis.idbx ?? {}
+  const idbx = globalThis.idbx = globalThis.idbx ?? {} // TODO: WTF????????
   store[type].validate = idbx[type] = validate
   methods[type].createDocument = (data, publish) => {
     return instance.save({ type, data, publish })
   }
-  methods[type].createRevision = function (id, data, from, publish) {
+  methods[type].createRevision = function(id, data, { from, publish } = {}) { // TODO: remove 'from' and take it from revision (or maybe we're not sending revision data)
     return instance.save({ id, type, data, publish, from })
   }
-  methods[type].archive = function (id, status = true) {
-    return instance.save({ })
+  methods[type].archive = function(id, archived = true) {
+    const result = this.latest({ id })
+    console.log({ aaa: "AAAA", result })
+    const { data, revision: { id: from } } = result
+    return instance.save({ id, data, archived, from })
   }
   // return validate
 }

@@ -204,24 +204,24 @@ export const generateGetters = (instance, store, methods, type) => {
   }
 }
 
-export function fetchEntries(type, { offset, limit, where } = {}) {
-  return queryCollection($ => {
-    const entry = $[type]
-    return entry
-      .latest({ archived: false })
-      .find(where)
-      .skip(offset)
-      .limit(limit)
-      .meta({
-        total: entry(options)
-          .latest({ archived: false })
-          .find(where)
-          .count()
-      })
-      .include(($, entry) => $(
-        entry.tag,
-        entry.category
-      ))
-      .data()
-  })
+// export function fetchEntries(type, { offset, limit, where } = {}) {
+//   return queryCollection($ => {
+//     const entry = $[type]
+//     return entry
+//       .latest({ archived: false })
+//       .find(where)
+//       .skip(offset)
+//       .limit(limit)
+//       .meta({
+//         total: entry(options)
+//           .latest({ archived: false })
+//           .find(where)
+//           .count()
+//       })
+//       .include(($, entry) => $(
+//         entry.tag,
+//         entry.category
+//       ))
+//       .data()
+//   })
 }
