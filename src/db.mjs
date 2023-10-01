@@ -9,11 +9,11 @@ const getStoreInstance = (key) => stores.get(key)
 
 export const repository = adapter => init => {
   class ContentRepository {
-    constructor (file) {
+    constructor(file) {
       Object.defineProperty(this, "filename", { value: file })
       this.data = null
     }
-    async load () {
+    async load() {
       stores.set(this, initDocument(this, init))
       const data = await adapter.open(this.filename)
       try {
@@ -30,7 +30,7 @@ export const repository = adapter => init => {
         console.error(e)
       }
     }
-    save ({ type, id, data, publish = true, from }) {
+    save({ type, id, data, publish = true, from, archive = false }) {
       // console.log("SAVING", { type, id, data, publish, from })
       const output = []
       const meta = {
@@ -41,14 +41,14 @@ export const repository = adapter => init => {
       const result = records
         .addRecord(
           write(output)
-        )({ type, id, data, meta, publish, from })
+        )({ type, id, data, meta, publish, from, archive })
       adapter.write(
         this.filename,
         output.join("")
       )
       return records.getRecord(result)
     }
-    query (fn) {
+    query(fn) {
       return fn(getStoreInstance(this).methods)
     }
   }
@@ -60,7 +60,7 @@ export const repository = adapter => init => {
       await instance.load()
       return instance
     },
-    open: async(file) => {
+    open: async (file) => {
       const instance = new ContentRepository(file)
       await instance.load()
       return instance

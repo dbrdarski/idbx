@@ -224,4 +224,4 @@ export const generateGetters = (instance, store, methods, type) => {
 //       ))
 //       .data()
 //   })
-}
+// }
