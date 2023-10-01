@@ -129,8 +129,8 @@ export const generateSetters = (instance, store, methods, type, initType) => {
     return instance.save({ id, type, data, publish, from })
   }
   methods[type].archive = function(id, archived = true) {
-    const result = this.latest({ id })
-    console.log({ aaa: "AAAA", result })
+    const result = this.latest({ id }).data()
+    console.log("AAAA", Object.keys(result))
     const { data, revision: { id: from } } = result
     return instance.save({ id, data, archived, from })
   }

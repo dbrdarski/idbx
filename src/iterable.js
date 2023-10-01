@@ -1,3 +1,4 @@
+import { getActiveQueryInstance } from "./query"
 // const getDocumentId = r => r.document.id
 
 // const add = (x, y) => x + y
@@ -72,27 +73,37 @@ export default (store, storeHelpers) => {
       )
     }
     meta(meta) {
-      return (meta && Object.keys(meta).length)
-        ? new Query(
-          {
-            ...this.#query,
-            meta: {
-              ...this.#query.meta,
-              ...meta
-            }
-          },
-          this.#iterator
-        )
-        : this
+      if (meta) {
+        this.#query.meta = {
+          ...this.#query.meta,
+          ...meta
+        }
+      }
+      return this
+      // return (meta && Object.keys(meta).length)
+      //   ? new Query(
+      //     {
+      //       ...this.#query,
+      //       meta: {
+      //         ...this.#query.meta,
+      //         ...meta
+      //       }
+      //     },
+      //     this.#iterator
+      //   )
+      //   : this
     }
     data(fn) {
       const relationships = this.#query.includeHandlers
       const [def] = relationships ?? []
-      const includes = relationships && {} // null or {}
-      const iterator = def
+      const hasRelationships = relationships?.size
+      if (hasRelationships) {
+        this.#query.includes = this.#query.includes ?? {}
+      }
+      const iterator = hasRelationships
         ? include(
           this.#iterator,
-          storeHelpers.include(def, includes)
+          storeHelpers.include(def, this.#query.includes)
         )
         : this.#iterator
       const data = collect(
@@ -100,14 +111,7 @@ export default (store, storeHelpers) => {
           ? map(iterator, fn)
           : iterator
       )
-      if (relationships) {
-        delete this.#query.includeHandlers
-        this.#query.includes = includes
-      }
-      return {
-        data,
-        ...this.#query
-      }
+      return data
     }
   }
 
@@ -243,8 +247,9 @@ export default (store, storeHelpers) => {
 
   return (data, ids) => {
     let i = 0
+    const query = getActiveQueryInstance()
     return new Query(
-      {},
+      query,
       next => {
         if (i < ids.length) {
           const key = ids[i++]

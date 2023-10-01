@@ -1,6 +1,7 @@
 import { initDocument } from "./stores.js"
 import { noop, mapToReduce } from "./utils.js"
 import { tokenize } from "./parser/tokenizer.js"
+import { runQuery } from "./query.js"
 
 export const write = (output = []) => (value) => output.push(value)
 
@@ -49,7 +50,8 @@ export const repository = adapter => init => {
       return records.getRecord(result)
     }
     query(fn) {
-      return fn(getStoreInstance(this).methods)
+      const result = runQuery(fn, getStoreInstance(this).methods)
+      return result
     }
   }
   return {
