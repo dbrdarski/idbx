@@ -1,6 +1,25 @@
 import iterable from "./iterable.js"
 import item from "./query-item.js"
 
+const documentEntry = () => ({
+  revisions: {
+    ids: [],
+    latest: null
+  },
+  publications: {
+    ids: [],
+    latest: null
+  },
+  drafts: {
+    ids: [],
+    latest: null
+  },
+  // latest: null,
+  // active: null,
+  // draft: null,
+  archived: false
+})
+
 export const generateGetters = (instance, store, methods, type) => {
   const documents = {
     all: {
@@ -47,29 +66,13 @@ export const generateGetters = (instance, store, methods, type) => {
     createDocument(id) {
       // console.log("CREATE DOC", id, type)
       if (!documents.all.byId.hasOwnProperty(id)) {
+        // documents.active.ids.push(id)
+        // documents.archived.ids.push(id)
         documents.all.ids.push(id)
-        documents.active.ids.push(id)
-        documents.archived.ids.push(id)
-        documents.all.byId[id] =
-          documents.active.byId[id] =
-          documents.archived.byId[id] = {
-            revisions: {
-              ids: [],
-              latest: null
-            },
-            publications: {
-              ids: [],
-              latest: null
-            },
-            drafts: {
-              ids: [],
-              latest: null
-            },
-            // latest: null,
-            // active: null,
-            // draft: null,
-            archived: false
-          }
+
+        // documents.active.byId[id] =
+        // documents.archived.byId[id] =
+        documents.all.byId[id] = documentEntry()
       }
     },
     createDocumentGetters(document) {
@@ -118,7 +121,7 @@ export const generateGetters = (instance, store, methods, type) => {
       if (id) {
         const match = documents[status].byId[id]
         const value = match[mode].latest
-        return queryItem(value && id, value)
+        return queryItem(value, records.revisions.byId[value])
       } else {
         return queryCollection(
           documents[status].byId,

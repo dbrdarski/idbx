@@ -21,7 +21,7 @@ export const initDocument = (instance, init) => {
   const objectStore = createStore({
     SymbolType: ObjectSymbol,
     serializer: write => value => {
-      const [ keys, values ] = serializeObject(value).map(matchType(write))
+      const [keys, values] = serializeObject(value).map(matchType(write))
       return `{${keys}${values}}`
     }
   })
@@ -38,7 +38,7 @@ export const initDocument = (instance, init) => {
 
   const recordStore = createStore({
     SymbolType: RecordSymbol,
-    handler ({ type, id, data, meta: { user, timestamp }, from, publish: published = false, archived = false }) {
+    handler({ type, id, data, meta: { user, timestamp }, from, publish: published = false, archived = false }) {
       if (!id) {
         id = generateUUID()
       }
@@ -63,12 +63,12 @@ export const initDocument = (instance, init) => {
       const { document, revision, record: data, archived, published } = record
       // console.log({ revision })
       // if (create) {
-        store[document.type].selectModel(document.id, revision.id, published, archived)
-        const validation = store[document.type].validate(data)
-        if (!validation) throw Error("Validation failed")
+      store[document.type].selectModel(document.id, revision.id, published, archived)
+      const validation = store[document.type].validate(data)
+      if (!validation) throw Error("Validation failed")
       // }
       const documentKey = documentStore.getKey(write)(document)
-      store[document.type].createRecord(document.id, record)
+      store[document.type].createRecord(document.id, record, archived, published)
       store[document.type].createDocumentGetters(document)
 
       const revisionKey = objectStore.getKey(write)(revision)
@@ -103,7 +103,7 @@ export const initDocument = (instance, init) => {
       case "basic":
         return getBasicTokenValue(token)
       case "bigint":
-          return getIntegerSymbol(token)
+        return getIntegerSymbol(token)
       case "number":
         return getNumberSymbol(token)
       case "string":
@@ -115,20 +115,20 @@ export const initDocument = (instance, init) => {
         return array
       }
       case "object": {
-        const [ shape, values ] = matches.map(parseToken)
+        const [shape, values] = matches.map(parseToken)
         const object = deserializeObject(shape, values)
         objectStore.getKey(write)(object)
         return object
       }
       case "record": {
-        const [ document, revision, data, archived ] = matches.map(parseToken)
+        const [document, revision, data, archived] = matches.map(parseToken)
         // console.log({ document, revision, record, meta, archived })
         const record = { document, revision, record: data, archived, publish: true } // TODO: { ...publish: true } needs to be correctly handled
         recordStore.getKey(write)(record)
         return record
       }
       case "document": {
-        const [ id, type ] = matches.map(parseToken)
+        const [id, type] = matches.map(parseToken)
         const document = { id, type }
         documentStore.getKey(write)(document)
         return document
