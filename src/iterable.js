@@ -1,4 +1,4 @@
-import { getActiveQueryInstance } from "./query"
+import { getActiveQueryInstance } from "./query.js"
 // const getDocumentId = r => r.document.id
 
 // const add = (x, y) => x + y

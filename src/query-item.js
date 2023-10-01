@@ -1,4 +1,4 @@
-import { getActiveQueryInstance } from "./query"
+import { getActiveQueryInstance } from "./query.js"
 
 export default (store, storeHelpers) => {
   class QueryItem {
