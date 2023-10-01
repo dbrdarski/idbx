@@ -61,7 +61,7 @@ export const initDocument = (instance, init) => {
     },
     serializer: write => (record, create) => {
       const { document, revision, record: data, archived, published } = record
-      // console.log({ revision })
+      console.log({ archived })
       // if (create) {
       store[document.type].selectModel(document.id, revision.id, published, archived)
       const validation = store[document.type].validate(data)

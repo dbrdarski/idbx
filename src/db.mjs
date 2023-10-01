@@ -31,7 +31,7 @@ export const repository = adapter => init => {
         console.error(e)
       }
     }
-    save({ type, id, data, publish = true, from, archive = false }) {
+    save({ type, id, data, publish = true, from, archived = false }) {
       // console.log("SAVING", { type, id, data, publish, from })
       const output = []
       const meta = {
@@ -42,7 +42,7 @@ export const repository = adapter => init => {
       const result = records
         .addRecord(
           write(output)
-        )({ type, id, data, meta, publish, from, archive })
+        )({ type, id, data, meta, publish, from, archived })
       adapter.write(
         this.filename,
         output.join("")

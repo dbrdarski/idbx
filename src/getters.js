@@ -22,18 +22,8 @@ const documentEntry = () => ({
 
 export const generateGetters = (instance, store, methods, type) => {
   const documents = {
-    all: {
-      byId: {},
-      ids: []
-    },
-    active: {
-      byId: {},
-      ids: []
-    },
-    archived: {
-      byId: {},
-      ids: []
-    }
+    byId: {},
+    ids: []
   }
   const records = {
     revisions: {
@@ -52,27 +42,25 @@ export const generateGetters = (instance, store, methods, type) => {
   store[type] = {
     getActiveDocuments(...ids) {
       return ids.reduce((acc, id) => {
-        const { publications: { latest } } = documents.all.byId[id]
+        const { publications: { latest } } = documents.byId[id]
         latest && acc.push(records.revisions.byId[latest])
         return acc
       }, [])
     },
     hasDocument(id) {
-      return documents.all.byId.hasOwnProperty(id)
+      return documents.byId.hasOwnProperty(id)
     },
     hasRecord(id) {
       return records.revisions.byId.hasOwnProperty(id)
     },
     createDocument(id) {
       // console.log("CREATE DOC", id, type)
-      if (!documents.all.byId.hasOwnProperty(id)) {
-        // documents.active.ids.push(id)
+      if (!documents.byId.hasOwnProperty(id)) {
         // documents.archived.ids.push(id)
-        documents.all.ids.push(id)
+        documents.ids.push(id)
 
-        // documents.active.byId[id] =
         // documents.archived.byId[id] =
-        documents.all.byId[id] = documentEntry()
+        documents.byId[id] = documentEntry()
       }
     },
     createDocumentGetters(document) {
@@ -80,18 +68,23 @@ export const generateGetters = (instance, store, methods, type) => {
       document.published ?? Object.defineProperties(document, {
         published: {
           enumerable: true,
-          get: () => documents.all.byId[id].publications.latest != null
+          get: () => documents.byId[id].publications.latest != null
         },
         archived: {
           enumerable: true,
-          get: () => documents.all.byId[id].archived
+          get: () => documents.byId[id].archived
         }
       });
     },
-    createRecord(documentId, record) {
+    createRecord(documentId, record, archived, published) {
       // console.log("CREATE RECORD", id, record)
       const { id } = record.revision
-      const document = documents.all.byId[documentId]
+
+      if (archived) {
+        documents
+      }
+
+      const document = documents.byId[documentId]
       document.revisions.ids.push(id)
       records.revisions.ids.push(id)
       records.revisions.byId[id] = record
@@ -116,16 +109,24 @@ export const generateGetters = (instance, store, methods, type) => {
 
   methods[type] = {
     latest({ id, archived = false, published }) {
-      const status = archived === false ? "active" : archived === true ? "archived" : "all"
+      const matchStatus = archived === null ? null : document => document.archived === archived
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
       if (id) {
-        const match = documents[status].byId[id]
-        const value = match[mode].latest
+        const document = documents.byId[id]
+        const status = archived == null || document?.archived === archived
+
+        if (!document && !status) {
+          return queryItem(null, null)
+        }
+
+        const value = document[mode].latest
         return queryItem(value, records.revisions.byId[value])
       } else {
         return queryCollection(
-          documents[status].byId,
-          documents[status].ids
+          documents.byId,
+          documents.ids
+        ).find(
+          matchStatus
         ).map(
           item => records.revisions.byId[item[mode].latest]
         ).find(
@@ -135,13 +136,19 @@ export const generateGetters = (instance, store, methods, type) => {
     },
     revisions({ id, archived = false, published }) {
       if (id) {
-        const items = documents[archived === false ? "active" : archived === true ? "archived" : "all"].byId[id]
-        if (!items) {
-          return null // TODO: make this query-able
+        const document = documents.byId[id]
+        const status = archived == null || document?.archived === archived
+        if (!document || !status) {
+          return queryCollection({}, [])
         }
+        // const items = documents[archived === false ? "active" : archived === true ? "archived" : "all"].byId[id]
+        // if (!items) {
+        //   return null // TODO: make this query-able
+        // }
+        //
         return queryCollection(
           records.revisions.byId,
-          items[published === true ? "publications" : published === false ? "drafts" : "revisions"].ids
+          document[published === true ? "publications" : published === false ? "drafts" : "revisions"].ids
         )
       } else {
         // TODO: flat Map resultls hell
@@ -156,15 +163,15 @@ export const generateGetters = (instance, store, methods, type) => {
     },
     getDocuments() {
       return queryCollection(
-        documents.all.byId,
-        documents.all.ids
+        documents.byId,
+        documents.ids
       )
     },
     // get().latest({ published: true })
     activeRevisions() {
       return queryCollection(
-        documents.all.byId,
-        documents.active.ids
+        documents.byId,
+        documents.ids
       ).map(item => records.revisions.byId[item.publications.latest])
 
       // return this.getDocuments()
@@ -173,12 +180,12 @@ export const generateGetters = (instance, store, methods, type) => {
     },
     // get({ id }).latest({ published: true })
     getActiveRevision(documentId) {
-      const { publications: { latest } } = documents.all.byId[documentId]
+      const { publications: { latest } } = documents.byId[documentId]
       return latest && records.revisions.byId[latest]
     },
     // get({ id }).latest({ published: null })
     getLatestRevision(documentId) {
-      const { revisions: { latest } } = documents.all.byId[documentId]
+      const { revisions: { latest } } = documents.byId[documentId]
       return latest && records.revisions.byId[latest]
     },
     // get({ id }).all({ published: true })
@@ -187,7 +194,7 @@ export const generateGetters = (instance, store, methods, type) => {
         records.revisions.byId,
         documentId == null
           ? records.publications.ids
-          : documents.all.byId[documentId].publications.ids
+          : documents.byId[documentId].publications.ids
       )
     },
     // get({ id }).all({ published: null })
@@ -197,7 +204,7 @@ export const generateGetters = (instance, store, methods, type) => {
         records.revisions.byId,
         documentId == null
           ? records.revisions.ids
-          : documents.all.byId[documentId].revisions.ids
+          : documents.byId[documentId].revisions.ids
       )
     },
     // get({ id, revision: true })
