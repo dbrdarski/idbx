@@ -108,7 +108,7 @@ export const generateGetters = (instance, store, methods, type) => {
   const queryCollection = iterable(store, store[type], methods)
 
   methods[type] = {
-    latest({ id, archived = false, published }) {
+    latest({ id, archived = false, published } = {}) {
       const matchStatus = archived === null ? null : document => document.archived === archived
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
       if (id) {
@@ -120,7 +120,7 @@ export const generateGetters = (instance, store, methods, type) => {
         }
 
         const value = document[mode].latest
-        return queryItem(value, records.revisions.byId[value])
+        return queryItem(value && id, records.revisions.byId[value])
       } else {
         return queryCollection(
           documents.byId,
@@ -158,7 +158,7 @@ export const generateGetters = (instance, store, methods, type) => {
       const match = records.revisions.byId[id]
       const status = archived == match.archived || archived == null
       return status && match
-        ? queryItem(id, match)
+        ? queryItem(match.document.id, match)
         : queryItem(null, null)
     },
     getDocuments() {
