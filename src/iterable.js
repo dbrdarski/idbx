@@ -6,9 +6,6 @@ const inc = x => x + 1
 const key = (_, k) => k
 const noop = () => { }
 
-// TODO: reimplement include recursively -> DONE
-// reimplement relationships on a data() -> DONE
-
 export default (store, storeHelpers) => {
   class Query {
     #iterator
