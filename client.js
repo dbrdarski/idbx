@@ -1,5 +1,4 @@
-import { repository } from "./src/db.mjs"
-import http from "http"
+import { repository, $or } from "./src/db.mjs"
 import { macros_article_JSON, cezare_borgia_JSON } from "./sample_data/index.js"
 import browser from "./src/adapters/browser.js"
 
@@ -33,7 +32,7 @@ const renderer = target => [
     class Vdom {
       tag = String
       attrs = Object
-      children = Array(globalThis.$or(Vdom, String))
+      children = Array($or(Vdom, String))
     }
 
     return {

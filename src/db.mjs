@@ -3,7 +3,9 @@ import { noop, mapToReduce } from "./utils.js"
 import { tokenize } from "./parser/tokenizer.js"
 import { runQuery } from "./query.js"
 
-export const write = (output = []) => (value) => output.push(value)
+export { $or } from "./schema.js"
+
+const write = (output = []) => (value) => output.push(value)
 
 const stores = new WeakMap
 const getStoreInstance = (key) => stores.get(key)
@@ -26,7 +28,11 @@ export const repository = adapter => init => {
           ),
           null
         )
-        this.data = globalThis.dbData = result
+        await result
+        return {
+          query: fn => this.query(fn)
+        }
+        // this.data = globalThis.dbData = result
       } catch (e) {
         console.error(e)
       }

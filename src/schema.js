@@ -5,16 +5,16 @@ import { getType, isClass } from "./utils.js"
   ============
 
   Should Validation be strict?
-    :: Yes
+    :: Yes // DONE
   should extra properties be ignored?
-    :: No, they should throw!
+    :: No, they should throw!  // DONE
   Should schema initialize the values (like set defaults) or simple validate?
-    :: Why not?!
+    :: Why not?!  // NOT SURE
   How should associations be handled?
-    :: Elegantly
+    :: Elegantly  // DONE
 */
 
-export const $or = globalThis.$or = (v1, v2) => {
+export const $or = (v1, v2) => {
   const validator = x => v1(x) || v2(x)
   v1 = createValidator(v1)
   v2 = createValidator(v2)
@@ -120,8 +120,7 @@ const createModelSchema = model => {
 export const generateSetters = (instance, store, methods, type, initType) => {
   // const validate = createSchema(initType.call(relations, {}))
   const validate = createModelSchema(initType())
-  const idbx = globalThis.idbx = globalThis.idbx ?? {} // TODO: WTF????????
-  store[type].validate = idbx[type] = validate
+  store[type].validate = validate
   methods[type].createDocument = (data, publish) => {
     return instance.save({ type, data, publish })
   }

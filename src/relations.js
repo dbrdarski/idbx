@@ -17,7 +17,7 @@ const isArchived = Symbol("isArchived")
 const documentId = Symbol("documentId")
 const revisionId = Symbol("revisionId")
 
-const allRelationships = globalThis.relationships = {}
+const allRelationships = {}
 const relStore = new Map()
 
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
