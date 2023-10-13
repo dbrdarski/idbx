@@ -56,6 +56,9 @@ export default (store, storeHelpers) => {
     //     yield value
     //   }
     // }
+    reduce(fn, init) {
+      return fn ? reduce(this.#iterator, fn, init) : this
+    }
     count() {
       return reduce(this.#iterator, inc, 0)
     }
