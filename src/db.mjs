@@ -3,6 +3,7 @@ import { noop, mapToReduce } from "./utils.js"
 import { tokenize } from "./parser/tokenizer.js"
 import { runQuery } from "./query.js"
 
+export { connect } from "./middleware.js"
 export { $or } from "./schema.js"
 
 const write = (output = []) => (value) => output.push(value)
