@@ -5,8 +5,8 @@ const applyMiddlewares = (action, middlewares) =>
     middlewares.reduceRight((acc, middleware) =>
       middlewareWrapper(middleware, acc),
       action.middleware
-        ? (ctx, ...args) => () => action(ctx, ...args)
-        : (_, ...args) => () => action(...args)
+        ? (ctx, ...args) => (...nextArgs) => action(ctx, ...nextArgs, ...args)
+        : (_, ...args) => (...nextArgs) => action(...nextArgs, ...args)
     ),
     "middleware",
     { value: true }
