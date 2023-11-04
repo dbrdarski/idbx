@@ -1,6 +1,4 @@
-const middlewareWrapper = (middleware, next) => (context, ...args) => {
-  middleware(context, next(context, ...args))
-}
+const middlewareWrapper = (middleware, next) => (context, ...args) => middleware(context, next(context, ...args))
 
 const applyMiddlewares = (action, middlewares) =>
   Object.defineProperty(
