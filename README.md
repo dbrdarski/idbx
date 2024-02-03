@@ -5,7 +5,7 @@ A JavaScript Content Repository
 ### Introduction
 What is LynxDB? One way to describe it would an in-memory document database with built in versioning. It's an append only databse, which means documents can be updated and archived, but this is done through creating "revisions" of existing documents, so no data is ever lost in the process.
 
-The implementation at it's core is based around the idea of structural sharing, which means any objects (deeply) equal by value (but not necessearly by reference) will get resolved to a single object when stored. All data is treated as immutable.
+The implementation at its core is based around the idea of structural sharing, which means any objects (deeply) equal by value (but not necessearly by reference) will get resolved to a single object when stored. All data is treated as immutable.
 
 This is how memory efficiency is achieved. This especially efficient when dealing with incremental changes to large documents, as all the common nodes will be reused between revisions (in fact between all the records in the database).
 
@@ -17,28 +17,21 @@ Note: This is all WIP and in very early stages. Not meant for production by any 
 
 ```javascript
 export default function schema({ $or }) {
-  class TitleAndSlug {
+  class TitleAndSlug { // reusable schema segment
     title = String
     slug = String
   }
-  class Vdom {
+  class Vdom { // this one is also recursive as it contains reference to itself
     tag = String
     attrs = Object
     children = Array($or(Vdom, String)) // Array(Vdom | String) with Babel transformer
   }
   return {
-    category({ post }) {
-        this.hasMany({ post }, "category")
-        return TitleAndSlug
-    },
-    tag({ post }) {
-        this.hasMany({ post }, "tag")
-        return TitleAndSlug
-    },
     post({ tag, category }) {
-      const Tag = this.belongsToMany({ tag })
-      const Category = this.belongsToMany({ category })
-
+      const Tag = this.belongsToMany({ tag }) // defines an a foreign key association for tag
+      const Category = this.belongsToMany({ category }) // category association
+      // Note: this foreign keys will be "captured" regardless of where they appear in the schema even in recursive segments (like 'Vdom' example above) and can be used for joins and querying by associations
+      //
       class Taxonomies {
         tags = Array(Tag)
         categories = Array(Category)
@@ -50,7 +43,15 @@ export default function schema({ $or }) {
         taxonomies = Taxonomies
         options = Object
       }
-    }
+    },
+    category({ post }) {
+        this.hasMany({ post }, "category") // defines reverse association
+        return TitleAndSlug
+    },
+    tag({ post }) {
+        this.hasMany({ post }, "tag") // defines reverse association
+        return TitleAndSlug
+    },
   }
 }
 ```
