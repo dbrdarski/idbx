@@ -2,7 +2,7 @@ export const nameSymbol = Symbol("name")
 
 const radix32bits = 2n ** 32n
 
-export function noop () {}
+export function noop() { }
 export const id = id => id
 export const define = (target, key, value) => Object.defineProperty(target, key, {
   value,
@@ -15,7 +15,7 @@ export const pipe = (...fns) => fns.reduce(pipe2)
 export const mapToReduce = fn => (acc, v) => fn(v)
 // export const mapToReduce = fn => (acc, v, i, arr) => fn(v, i, arr)
 
-const divrem = (a, b) => [ a / b, a % b ]
+const divrem = (a, b) => [a / b, a % b]
 const sum = (a, b) => a + b
 const inc = sum.bind(null, 1n)
 
@@ -32,7 +32,7 @@ const intSerializer = (radix, offset) => [
     let rem = 0n
     let str = ""
     do {
-      [ int, rem ] = divrem(int, radix)
+      [int, rem] = divrem(int, radix)
       str += String.fromCharCode(Number(rem + offset))
     } while (int !== 0n)
     return str
@@ -52,7 +52,7 @@ const hashSerializer = (radix) => [
     let rem = 0n
     let str = ""
     while (int !== 0n) {
-      [ int, rem ] = divrem(int, radix)
+      [int, rem] = divrem(int, radix)
       str += Number(rem).toString(Number(radix))
     }
     return str
@@ -66,15 +66,15 @@ const hashSerializer = (radix) => [
   }
 ]
 
-export const [ encodeInt, decodeInt ] = intSerializer(2n ** 16n - 2n ** 8n, 2n ** 8n)
-export const [ encodeHashString, decodeHashString ] = intSerializer(2n ** 16n)
-export const [ encodeHash, decodeHash ] = hashSerializer(16n)
+export const [encodeInt, decodeInt] = intSerializer(2n ** 16n - 2n ** 8n, 2n ** 8n)
+export const [encodeHashString, decodeHashString] = intSerializer(2n ** 16n)
+export const [encodeHash, decodeHash] = hashSerializer(16n)
 
-export function floatToIntArray (f) {
+export function floatToIntArray(f) {
   return new Uint32Array(Float64Array.of(f).buffer)
 }
 
-export function intArrayToFloat (is) {
+export function intArrayToFloat(is) {
   return (new Float64Array(Uint32Array.from(is).buffer))[0]
 }
 
@@ -83,10 +83,10 @@ export const decodeFloat = str => intArrayToFloat(divrem(decodeInt(str), radix32
 
 export const submatch = (str, regex) => [...str.matchAll(regex)].map(([v]) => v)
 
-export function getVNodeTree (el) {
+export function getVNodeTree(el) {
   switch (el.nodeType) {
     case 1:
-      return getVNode (el)
+      return getVNode(el)
     case 3:
       return el.textContent
     default:
@@ -94,17 +94,17 @@ export function getVNodeTree (el) {
   }
 }
 
-function getVNode (el) {
-    const tag = el.tagName.toLowerCase()
-    const attrs = {}
-    for (const attr of el.getAttributeNames()) {
-        attrs[attr] = el.getAttributeNode(attr).value
-    }
-    const children = Array.from(el.childNodes).map(getVNodeTree).filter(x => x != null)
-    return { tag, attrs, children }
+function getVNode(el) {
+  const tag = el.tagName.toLowerCase()
+  const attrs = {}
+  for (const attr of el.getAttributeNames()) {
+    attrs[attr] = el.getAttributeNode(attr).value
+  }
+  const children = Array.from(el.childNodes).map(getVNodeTree).filter(x => x != null)
+  return { tag, attrs, children }
 }
 
-export function createElement ({ tag, attrs, children }) {
+export function createElement({ tag, attrs, children }) {
   const el = document.createElement(tag)
   if (attrs) {
     for (const [k, v] of Object.entries(attrs)) {
@@ -119,7 +119,7 @@ export function createElement ({ tag, attrs, children }) {
   return el
 }
 
-export function render (parent, vdom) {
+export function render(parent, vdom) {
   const el = typeof vdom === 'string'
     ? document.createTextNode(vdom)
     : createElement(vdom)
@@ -165,7 +165,106 @@ export const once = fn => {
 
 export const isClass = v => typeof v === 'function' && /^\s*class\s+/.test(v.toString())
 
+export const getObjectType = Function.prototype.call.bind(Object.prototype.toString)
+export const objectType = name => `[object ${name}]`
+
 // export const throwableOnce = (msg, fn, done = false) => v => {
 //   if (done) throw Error(msg)
 //   fn(v)
 // }
+
+export const Enum = (...args) => {
+  const memo = new Map
+  const statics = Object.fromEntries(
+    args.map((name, index) => [
+      name,
+      {
+        enumerable: true,
+        get() {
+          if (!memo.has(name)) {
+            memo.set(name, new this(index))
+          }
+          return memo.get(name)
+        }
+      }
+    ])
+  )
+  const Enum = class extends Number {
+    constructor(value) {
+      if (memo.has(value)) {
+        return memo.get(value)
+      }
+      switch (typeof value) {
+        case "number": {
+          if (value >= 0 && value <= args.length) {
+            super(value)
+            memo.set(value, this);
+            return this
+          }
+        }
+        case "string": {
+          if (Object.getPrototypeOf(new.target).hasOwnProperty(value)) {
+            return new.target[value]
+          }
+        }
+        default: {
+          if (value instanceof new.target) {
+            return value
+          }
+          throw Error("Invalid enum value")
+        }
+      }
+    }
+    static *[Symbol.iterator]() {
+      for (const key of Object.keys(Enum)) {
+        yield this[key];
+      }
+    }
+    [Symbol.toPrimitive](hint) {
+      if (!memo.has(this)) {
+        memo.set(this, Symbol(this.toString()))
+      }
+      return hint === "number"
+        ? this.valueOf()
+        : memo.get(this)
+    }
+    toNumeric() {
+      return this.valueOf()
+    }
+    toString() {
+      return `${this.constructor.name}<${args[this.valueOf()]}>`
+    }
+  }
+  return Object.defineProperties(Enum, statics)
+}
+
+const Subset = set => {
+  set = [...set]
+  const [encode, decode] = produce(set)
+  return class Subset extends Number {
+    #subset
+    constructor(value) {
+      switch (typeof value) {
+        case "number": {
+          super(value)
+          this.#subset = decode(value)
+          break
+        }
+        case "object":
+        case "function": {
+          if (value && Symbol.iterator in value) {
+            super(encode([...value]))
+            this.#subset = value
+            break
+          }
+        }
+        default: {
+          throw Error("Invalid Subset value.")
+        }
+      }
+    }
+    [Symbol.iterator]() {
+      return this.#subset[Symbol.iterator]()
+    }
+  }
+}

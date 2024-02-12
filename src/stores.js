@@ -1,6 +1,6 @@
-import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, RecordSymbol, DocumentSymbol } from "./symbols.js"
+import { ArraySymbol, ObjectSymbol, StringSymbol, NumberSymbol, IntegerSymbol, RecordSymbol, DocumentSymbol, EnumerationSymbol, SymbolSymbol, SubsetSymbol } from "./symbols.js"
 import { createStore, serializeObject, deserializeObject, generateUUID } from "./helpers.js"
-import { getType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
+import { getType, getObjectType, objectType, submatch, encodeInt, decodeInt, encodeFloat, decodeFloat } from "./utils.js"
 import { allValuesRegex } from "./parser/tokenizer.js"
 import { initModels } from "./models.js"
 import { $or } from "./schema.js"
@@ -80,6 +80,11 @@ export const initDocument = (instance, init) => {
     }
   })
 
+  const enumStore = createStore({
+    SymbolType: EnumerationSymbol,
+    serializer: _ => JSON.stringify
+  })
+
   const allStores = {
     stringStore,
     arrayStore,
@@ -134,6 +139,9 @@ export const initDocument = (instance, init) => {
         documentStore.getKey(write)(document)
         return document
       }
+      case "enumeration": { }
+      case "symbol": { }
+      case "subset": { }
     }
   }
 
@@ -159,8 +167,13 @@ export const initDocument = (instance, init) => {
         return recordStore.getValue(token)
       case "D":
         return documentStore.getValue(token)
+      case "E":
+      case "Y":
+      case "U":
     }
   }
+
+  const Enum = objectType("Enum")
 
   const matchType = write => value => {
     const type = getType(value)
@@ -177,8 +190,25 @@ export const initDocument = (instance, init) => {
         return stringStore.getKey(write)(value)
       case "array":
         return arrayStore.getKey(write)(value)
+      case "function": {
+        switch (getObjectType(value)) {
+          case Enum: {
+
+          }
+          default: {
+
+          }
+        }
+      }
       case "object":
-        return objectStore.getKey(write)(value)
+        switch (getObjectType(value)) {
+          case Enum: {
+
+          }
+          default: {
+            return objectStore.getKey(write)(value)
+          }
+        }
     }
   }
 

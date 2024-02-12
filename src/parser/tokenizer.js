@@ -21,7 +21,7 @@ export const tokenizer = parsers => str => {
       }
     }
     if (cursor) {
-      throw new Error(`Unknown token: "${ str.substring(0, cursor) }"`)
+      throw new Error(`Unknown token: "${str.substring(0, cursor)}"`)
     } else if (token) {
       // push current token onto sequence
       tokens.push(token)
@@ -33,7 +33,7 @@ export const tokenizer = parsers => str => {
 
 const allChars = '[^\\u0000\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f !\\"#$%&"()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\\\]\\^\\_\\`abcdefghijklmnopqrstuvwxyz\\{\\|\\}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]'
 const singleValues = '[TFV]' // true, false, void
-const referentialTypes = '[NOSARD+-]' // number, object, string, array, record, document, bigints
+const referentialTypes = '[NOSARDEYU+-]' // number, object, string, array, record, document, bigints
 const allValues = `${singleValues}|${referentialTypes}${allChars}+`
 
 const string = /"(?:[^"\\]|\\.)*"/
@@ -42,6 +42,9 @@ const array = RegExp(`\\[(${allValues})*\\]`)
 const object = RegExp(`\\{([A]${allChars}+)([A]${allChars}+)\\}`)
 const record = RegExp(`\\(([D]${allChars}+)([O]${allChars}+)([O]${allChars}+)([TF])\\)`)
 const document = RegExp(`\\<([S]${allChars}+)([S]${allChars}+)\\>`)
+const enumeration = RegExp(`\\|([S]${allChars}+)([S]${allChars}+)`)
+const symbol = RegExp(`#([E]${allChars}+)([+]${allChars}+)`) // [N] or [+] ?????!!!!!!
+const subset = RegExp(`$([AOE]${allChars}+)([+]${allChars}+)`)
 export const allValuesRegex = RegExp(allValues, 'g')
 
 export const tokenize = tokenizer({
@@ -50,5 +53,8 @@ export const tokenize = tokenizer({
   array,
   object,
   record,
-  document
+  document,
+  enumeration,
+  symbol,
+  subset
 })
