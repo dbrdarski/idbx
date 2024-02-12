@@ -45,17 +45,6 @@ export default (store, storeHelpers) => {
         )
         : this
     }
-    // [Symbol.iterator]* () {
-    //   let value
-    //   let proceed = true
-    //   const setValue = x => {
-    //     value = x
-    //   }
-    //   while (proceed) {
-    //     proceed = iterator(setValue)
-    //     yield value
-    //   }
-    // }
     reduce(fn, init) {
       return fn ? reduce(this.#iterator, fn, init) : this
     }
@@ -119,7 +108,7 @@ export default (store, storeHelpers) => {
   //   let i = 0
   //   return next => {
   //     if (i < array.length) {
-  //       next(array[i++], i, array)
+  //       next(array[i], i++, array)
   //       return true
   //     }
   //     return false

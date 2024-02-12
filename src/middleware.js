@@ -1,16 +1,8 @@
-const middlewareWrapper = (middleware, next) => (context, ...args) => middleware(context, next(context, ...args))
-
 const applyMiddlewares = (action, middlewares) =>
-  Object.defineProperty(
-    middlewares.reduceRight((acc, middleware) =>
-      middlewareWrapper(middleware, acc),
-      action.middleware
-        ? (ctx, ...args) => (...nextArgs) => action(ctx, ...nextArgs, ...args)
-        : (_, ...args) => (...nextArgs) => action(...nextArgs, ...args)
-    ),
-    "middleware",
-    { value: true }
-  )
+  middlewares.reduceRight((next, middleware) =>
+    function (...args) {
+    return middleware(this, next.bind(this, ...args))
+}, action)
 
 const middlewareHandler = middlewares => target => {
   switch (typeof target) {
