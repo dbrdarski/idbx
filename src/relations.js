@@ -10,7 +10,7 @@ const apply = fn => fn()
 //   return target[key]
 // }
 // const isModel = Symbol("isModel")
-const noop = () => {}
+const noop = () => { }
 
 const isPublished = Symbol("isPublished")
 const isArchived = Symbol("isArchived")
@@ -54,17 +54,17 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   const recorder = (set, rel, type, parentName, handler, id) => {
     const connections = allRelationships[parentName].activeDocuments[id]?.[rel]
     if (connections == null) return // TODO: investigate connections.length
-      for (const record of store[type]?.getActiveDocuments(...connections)) {
-        set(record)
-        handler?.(record.document.id)
-      }
+    for (const record of store[type]?.getActiveDocuments(...connections)) {
+      set(record)
+      handler?.(record.document.id)
+    }
   }
   const includeProxy = (includes) => {
     const proxy = new Proxy(noop, {
-      get (_, prop) {
+      get(_, prop) {
         return setter.bind(null, includes, prop)
       },
-      apply (_, thisArg, models) {
+      apply(_, thisArg, models) {
         const handlers = models.map(apply)
         return item => {
           for (const handler of handlers) {
@@ -77,7 +77,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
   const modelProxy = (model, includes, parentName, parentRel) => {
     const proxy = new Proxy(noop, {
-      get (_, prop) {
+      get(_, prop) {
         if (!prop in model) {
           console.error(
             Error(`Model ${model[nameSymbol]} has no relationship named '${prop}'`)
@@ -89,11 +89,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           ? modelProxy(value, includes, model[nameSymbol], prop) // TODO: think if we need this (relStore) -> type === "function"
           : value
       },
-      apply (_, thisArg, fns) {
-        if (fns.length) {
+      apply(_, thisArg, fns) {
+        if (fns.length) { // called with arguments
           let set, childrenHandler
           fns.forEach(fn => {
-            if (fn.length) {
+            if (fn.length) { // if hadnler function has arguments it's recursive inclusion of sub relationship
               childrenHandler = fn(proxy)
             } else {
               set = fn()
@@ -101,7 +101,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           })
           set = set ?? setter(includes, parentRel)
           return () => recorder.bind(null, set, parentRel, model[nameSymbol], parentName, childrenHandler)
-        } else {
+        } else { // called without arguments
           const set = setter(includes, parentRel)
           return recorder.bind(null, set, parentRel, model[nameSymbol], parentName, null)
         }
@@ -128,6 +128,11 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   storeHelpers.releaseModel = () => {
     finalizer.forEach(applyContext(validatedModel))
     validatedModel = null
+  }
+
+  storeHelpers.queryReleationship = (type, ...ids) => {
+    console.log(JSON.stringify(allRelationships, null, 2))
+    console.log(type, ids)
   }
 
   const updateRelatedModel = ($, current, next, { add, remove }) => {
@@ -173,42 +178,42 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
   }
 
   const relHandler = fn => {
-    const [ init, set, finalize ] = fn()
+    const [init, set, finalize] = fn()
     initializer.push(init)
     finalizer.push(finalize)
     return set
   }
 
   const relationshipMethods = {
-    hasOne (def, relationKey) {
+    hasOne(def, relationKey) {
       if (relationKey == null) {
         throw Error("Relation key is required on 'hasOne' relationships!")
       }
-      const [ name, model ] = Object.entries(def)[0]
+      const [name, model] = Object.entries(def)[0]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       // schema[name] = allRelationships[model[nameSymbol]].schema
       store[model[nameSymbol]].addRelation(relationKey, {
-        add (documentId, ...ids) {
+        add(documentId, ...ids) {
           for (const id of ids) {
             const document = activeDocuments[id] = activeDocuments[id] || {}
             document[name] = documentId
           }
         },
-        remove (documentId, ...ids) {
+        remove(documentId, ...ids) {
           for (const id of ids) {
             // document = activeDocuments[id] = activeDocuments[id] || {}
             // document[name] = null
             activeDocuments[id][name] = null
           }
         },
-        update (revisionId, ...ids) {
+        update(revisionId, ...ids) {
           for (const id of ids) {
             const document = revisionsByDocument[id] = revisionsByDocument[id] || {}
             const set = document[name] = document[name] ?? new Set
             set.add(revisionId)
           }
         },
-        validate ($, id) {
+        validate($, id) {
           const prev = activeDocuments[id]?.[name]
           if (prev != null && prev !== $[documentId]) {
             throw Error(`Cannot assign multiple ${name}s to ${type}`)
@@ -216,22 +221,22 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         }
       })
     },
-    hasMany (def, relationKey) {
+    hasMany(def, relationKey) {
       if (relationKey == null) {
         throw Error("Relation key is required on 'hasMany' relationships!")
       }
-      const [ name, model ] = Object.entries(def)[0]
+      const [name, model] = Object.entries(def)[0]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       // schema[name] = allRelationships[model[nameSymbol]].schema
       store[model[nameSymbol]].addRelation(relationKey, {
-        add (documentId, ...ids) {
+        add(documentId, ...ids) {
           for (const id of ids) {
             const document = activeDocuments[id] = activeDocuments[id] || {}
             const set = document[name] = document[name] ?? new Set
             set.add(documentId)
           }
         },
-        remove (documentId, ...ids) {
+        remove(documentId, ...ids) {
           for (const id of ids) {
             // document = activeDocuments[id] = activeDocuments[id] || {}
             // const set = document[name] ?? new Set
@@ -239,7 +244,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
             activeDocuments[id][name].delete(documentId)
           }
         },
-        update (revisionId, ...ids) {
+        update(revisionId, ...ids) {
           for (const id of ids) {
             const document = revisionsByDocument[id] = revisionsByDocument[id] || {}
             const set = document[name] = document[name] ?? new Set
@@ -248,8 +253,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         }
       })
     },
-    belongsToOne (def) {
-      const [ name, model ] = Object.entries(def)[0]
+    belongsToOne(def) {
+      const [name, model] = Object.entries(def)[0]
       // schema[name] = allRelationships[model[nameSymbol]].schema
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [
@@ -272,8 +277,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         return true
       }
     },
-    belongsToMany (def) {
-      const [ name, model ] = Object.entries(def)[0]
+    belongsToMany(def) {
+      const [name, model] = Object.entries(def)[0]
       // schema[name] = allRelationships[model[nameSymbol]].schema
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       const set = relHandler(state => [

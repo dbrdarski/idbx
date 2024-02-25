@@ -191,49 +191,6 @@ export default (store, storeHelpers) => {
     })
   }
 
-  // const a = effect(Array.from({ length: 100000 }, (x, i) => x => { console.log(i); return x(); } ))
-  // consumeEffect(a)
-
-  // const copyPost = post => new Post(post)
-  // const getPostById = id => Post.byId(id)
-  //
-  // const searchByTitle = (title, offset, limit) => {
-  //   return Post
-  //     .latest({
-  //        id?,
-  //        status: Post.Status.Archived
-  //      })
-  //     .revision(id)
-  //     .revisions(id?)
-  //     .filter(post => post.data.title.includes(title))
-  //     .skip(offset)
-  //     .limit(offset)
-  //     .include([ Tag, Category ])
-  //     .data(post => post.data.head)
-  // }
-  //
-  // const createPost = p =>
-  //   Post(p).save()
-  //
-  // const addTag = (post, ...tagIds) =>
-  //   post.attach(Tag, ...tagIds)
-  //
-  // const addPostTaxonomy = (taxonomy, ids) =>
-  //   post.attach(taxonomy, ...ids)
-
-  // return (data, ids) => {
-  //   const iterator = ids[Symbol.iterator]()
-  //   return new Query(
-  //     {},
-  //     next => {
-  //       const { value: key, done } = iterator.next()
-  //       if (done) return false
-  //       next(data[key], key, data)
-  //       return true
-  //     }
-  //   )
-  // }
-
   return (data, ids) => {
     let i = 0
     const query = getActiveQueryInstance()
