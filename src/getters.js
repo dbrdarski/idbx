@@ -37,7 +37,8 @@ export const generateGetters = (instance, store, methods, type) => {
       ids: []
     }
   }
-  store[type] = {
+
+  const storeHelpers = store[type] = {
     getActiveDocuments(...ids) {
       return ids.reduce((acc, id) => {
         const { publications: { latest } } = documents.byId[id]
@@ -95,13 +96,18 @@ export const generateGetters = (instance, store, methods, type) => {
     }
   }
 
-  const queryItem = item(store, store[type], methods)
-  const queryCollection = iterable(store, store[type], methods)
+  const queryItem = item(store, storeHelpers, methods)
+  const queryCollection = iterable(store, storeHelpers, methods)
 
   methods[type] = {
-    latest({ id, archived = false, published } = {}) {
+    testRelationships() {
+      return storeHelpers.queryRelationship()
+    },
+    latest({ id, rel, archived = false, published } = {}) {
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
-      if (id) {
+      if (rel) {
+
+      } else if (id) {
         const document = documents.byId[id]
         const status = archived == null || document?.archived === archived
 

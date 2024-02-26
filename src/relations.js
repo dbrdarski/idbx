@@ -130,9 +130,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     validatedModel = null
   }
 
-  storeHelpers.queryReleationship = (type, ...ids) => {
+  storeHelpers.queryRelationship = (...ids) => {
     console.log(JSON.stringify(allRelationships, null, 2))
     console.log(type, ids)
+    return allRelationships
   }
 
   const updateRelatedModel = ($, current, next, { add, remove }) => {
