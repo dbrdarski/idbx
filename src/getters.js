@@ -100,8 +100,8 @@ export const generateGetters = (instance, store, methods, type) => {
   const queryCollection = iterable(store, storeHelpers, methods)
 
   methods[type] = {
-    testRelationships() {
-      return storeHelpers.queryRelationship()
+    testRelationships(...args) {
+      return storeHelpers.queryRelationship(...args)
     },
     latest({ id, rel, archived = false, published } = {}) {
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"

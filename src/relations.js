@@ -130,10 +130,10 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     validatedModel = null
   }
 
-  storeHelpers.queryRelationship = (...ids) => {
-    console.log(JSON.stringify(allRelationships, null, 2))
-    console.log(type, ids)
-    return allRelationships
+  storeHelpers.queryRelationship = (type, ...ids) => {
+    console.log(type, JSON.stringify(allRelationships[type], null, 2))
+    console.log(ids)
+    return { allRelationships, [type]: allRelationships[type].activeDocuments }
   }
 
   const updateRelatedModel = ($, current, next, { add, remove }) => {
