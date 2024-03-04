@@ -62,9 +62,8 @@ export const initDocument = (instance, init) => {
     },
     serializer: write => (record, create) => {
       const { document, revision, record: data, archived, published } = record
-      console.log({ archived })
       // if (create) {
-      store[document.type].selectModel(document.id, revision.id, published, archived)
+      store[document.type].selectModel(document.id, revision.id, revision.published, archived)
       const validation = store[document.type].validate(data)
       if (!validation) throw Error("Validation failed")
       // }
@@ -75,7 +74,7 @@ export const initDocument = (instance, init) => {
       const revisionKey = objectStore.getKey(write)(revision)
       const dataKey = objectStore.getKey(write)(data)
       const archivedValue = matchType(write)(archived)
-      // create && store[document.type].releaseModel()
+      store[document.type].releaseModel()
       return `(${documentKey}${revisionKey}${dataKey}${archivedValue})`
     }
   })

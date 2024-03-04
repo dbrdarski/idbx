@@ -114,9 +114,9 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     validatorPrototype[name] = methods
   }
 
-  storeHelpers.selectModel = (docId, revId, active, archived = false) => {
+  storeHelpers.selectModel = (docId, revId, published, archived = false) => {
     validatedModel = Object.create(validatorPrototype, {
-      [isPublished]: { value: active },
+      [isPublished]: { value: published },
       [isArchived]: { value: archived },
       [documentId]: { value: docId },
       [revisionId]: { value: revId }
