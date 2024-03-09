@@ -89,7 +89,6 @@ export default (store, storeHelpers) => {
       if (hasRelationships) {
         this.#query.includes = this.#query.includes ?? {}
       }
-      console.log({ hasRelationships })
       const iterator = hasRelationships
         ? include(
           this.#iterator,
@@ -187,7 +186,6 @@ export default (store, storeHelpers) => {
 
   const include = (iterator, include) => next => {
     return iterator((value, prop, target) => {
-      console.log("INCLUDER", { value, prop, target, include })
       include(prop)
       next(value, prop, target)
     })
