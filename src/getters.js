@@ -2,6 +2,7 @@ import iterable from "./iterable.js"
 import item from "./query-item.js"
 
 const notNull = item => item != null
+const identity = x => x
 const documentEntry = () => ({
   revisions: {
     ids: [],
@@ -98,16 +99,28 @@ export const generateGetters = (instance, store, methods, type) => {
 
   const queryItem = item(store, storeHelpers, methods)
   const queryCollection = iterable(store, storeHelpers, methods)
+  const queryRelationship = (rel, active) => {
+    if (rel) {
+      rel.active = active
+      return rel?.(storeHelpers.relationship(identity, rel))
+    }
+  }
 
   methods[type] = {
-    testRelationships(...args) {
-      return storeHelpers.queryRelationship(...args)
-    },
+    // relationship(fn) {
+    //   const iterable = fn(storeHelpers.relationship(x => x))
+    //   return queryCollection(
+    //     documents.byId,
+    //     iterable
+    //   ).map(
+    //     item => records.revisions.byId[item.publications.latest]
+    //   ).find(
+    //     notNull
+    //   )
+    // },
     latest({ id, rel, archived = false, published } = {}) {
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
-      if (rel) {
-
-      } else if (id) {
+      if (id) {
         const document = documents.byId[id]
         const status = archived == null || document?.archived === archived
 
@@ -121,7 +134,7 @@ export const generateGetters = (instance, store, methods, type) => {
         const matchStatus = archived == null ? null : document => document.archived === archived
         return queryCollection(
           documents.byId,
-          documents.ids
+          queryRelationship(rel, true) ?? documents.ids
         ).find(
           matchStatus
         ).map(
@@ -131,7 +144,7 @@ export const generateGetters = (instance, store, methods, type) => {
         )
       }
     },
-    revisions({ id, archived = false, published }) {
+    revisions({ id, rel, archived = false, published } = {}) {
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
       if (id) {
         const document = documents.byId[id]
@@ -139,21 +152,24 @@ export const generateGetters = (instance, store, methods, type) => {
         if (!document || !status) {
           return queryCollection({}, [])
         }
+        const ids = queryRelationship(rel, false) ?? records[mode].ids
         return queryCollection(
-          records.revisions.byId,
-          document[mode].ids
+          rel?.inversed ? records.revisions.byId : documents.byId,
+          queryRelationship(rel, false) ?? document[mode].ids
         )
       } else {
         const matchStatus = archived == null ? null : document => document.archived === archived
+        const ids = queryRelationship(rel, false) ?? records[mode].ids
         return queryCollection(
-          records.revisions.byId,
-          records[mode].ids
+          rel?.inversed ? records.revisions.byId : documents.byId,
+          ids
         ).find(
           matchStatus
         )
       }
     },
     revision({ id, archived = false, published }) {
+      // should 'published' be also checked?
       const match = records.revisions.byId[id]
       const status = archived == match.archived || archived == null
       return status && match

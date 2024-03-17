@@ -2,39 +2,59 @@ import { nameSymbol, once } from "./utils.js"
 
 const applyContext = context => fn => fn.call(context)
 const apply = fn => fn()
-// const getOrSetDefault = (target, key, defaultValue) => {
-//   if (!target.hasOwnProperty(key)) {
-//     target[key] = defaultValue
-//     return defaultValue
-//   }
-//   return target[key]
-// }
+
+const getOrSetDefault = (target, key, initDefaultValue) => {
+  if (!target.hasOwnProperty(key)) {
+    return target[key] = initDefaultValue()
+  }
+  return target[key]
+}
+
+const createEmptyObject = () => ({})
 // const isModel = Symbol("isModel")
 const noop = () => { }
+
+const mergeSetsIterator = (sets) => (
+  new Set([...sets.map(set => Array.from(set))])
+)[Symbol.iterator]()
+
+const mergeSetsLazyIterator = function*(sets) {
+  const passed = new Set
+  for (const set of sets) {
+    for (const item of set) {
+      if (!passed.has(item)) {
+        passed.add(item)
+        yield item
+      }
+    }
+  }
+}
 
 const isPublished = Symbol("isPublished")
 const isArchived = Symbol("isArchived")
 const documentId = Symbol("documentId")
 const revisionId = Symbol("revisionId")
 
-const allRelationships = {}
+const allRelationships = window.allRelationships = {}
 const relStore = new Map()
+const inverseRelations = window.inverseRelations = {}
 
+// p.get = Proxy(model :: Model, handler :: Iterable => Iterable)
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
   const modelSchema = {
     type,
     model: typeInit,
-    relations: {},
-    handlers: {}
+    // relations: {},
+    // handlers: {}
   }
   relStore.set(typeInit, modelSchema)
   const storeHelpers = store[type]
   const relationships = allRelationships[type] = {}
 
   // activeDocuments aka active
-  const activeDocuments = relationships.activeDocuments = {}
-  const documentsByRevision = relationships.documentsByRevision = {}
-  const revisionsByDocument = relationships.revisionsByDocument = {}
+  const activeDocuments = relationships.activeDocuments = {} // { [documentId]: Set(documentId) }
+  const documentsByRevision = relationships.documentsByRevision = {} // { [revisionId]: Set(documentId) }
+  const revisionsByDocument = relationships.revisionsByDocument = {} // { [documentId]: Set(revisionId) }
   const schema = relationships.schema = {
     [nameSymbol]: type
   }
@@ -85,7 +105,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
           return
         }
         const value = model[prop]
-        return relStore.has(value)
+        return relStore.has(value) // Not sure what the edge case is for !relStore.has(value)
           ? modelProxy(value, includes, model[nameSymbol], prop) // TODO: think if we need this (relStore) -> type === "function"
           : value
       },
@@ -130,11 +150,56 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     validatedModel = null
   }
 
-  storeHelpers.queryRelationship = (type, ...ids) => {
-    console.log(type, JSON.stringify(allRelationships[type], null, 2))
-    console.log(ids)
-    return { allRelationships, [type]: allRelationships[type].activeDocuments }
-  }
+  const relProxy = (parentModel, parentHandler, rel) => new Proxy(noop, {
+    get(_, prop) {
+      if (!prop in relStore) {
+        throw Error(`Model ${parentModel[nameSymbol]} has no relationship named '${prop}'`)
+      }
+      const [model, relationKey, inversed] = inverseRelations[parentModel[nameSymbol]][prop]
+      rel.inversed ??= !inversed
+      const handler = args => parentHandler(
+        store[model].queryRelationship(
+          rel.active ? "activeDocuments" : inversed ? "documentsByRevision" : "revisionsByDocument",
+          relationKey,
+          args
+        )
+      )
+      return relProxy(parentModel[prop], handler, rel)
+    },
+    apply(_, thisArg, args) {
+      return parentHandler(args.length ? args : null)
+    }
+  })
+
+  storeHelpers.relationship = relProxy.bind(null, typeInit)
+
+  storeHelpers.queryRelationship = (key, targetType, ids) => ({
+    *[Symbol.iterator]() {
+      const { [key]: entries } = relationships
+      const passed = new Set
+      for (const x of ids ?? Object.values(entries)) {
+        for (const item of ids
+          ? entries[x]?.[targetType] ?? []
+          : x[targetType]
+        ) {
+          if (!passed.has(item)) {
+            passed.add(item)
+            yield item
+          }
+        }
+      }
+    }
+  })
+
+  // storeHelpers.queryRelationship = (targetType, ...ids) => {
+  //   // const result = new Set
+  //   const { activeDocuments } = relationships
+  //   const targets = ids.length
+  //     ? ids.map(id => activeDocuments[id]?.[targetType])
+  //     : Object.values(activeDocuments).map(r => r[targetType])
+
+  //   return { [Symbol.iterator]: mergeSetsLazyIterator.bind(null, targets) } // targets
+  // }
 
   const updateRelatedModel = ($, current, next, { add, remove }) => {
     const id = $[documentId]
@@ -193,6 +258,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
       const [name, model] = Object.entries(def)[0]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       // schema[name] = allRelationships[model[nameSymbol]].schema
+      getOrSetDefault(inverseRelations, type, createEmptyObject)[name] = [model[nameSymbol], relationKey]
+      getOrSetDefault(inverseRelations, model[nameSymbol], createEmptyObject)[relationKey] = [type, name]
       store[model[nameSymbol]].addRelation(relationKey, {
         add(documentId, ...ids) {
           for (const id of ids) {
@@ -227,6 +294,8 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
         throw Error("Relation key is required on 'hasMany' relationships!")
       }
       const [name, model] = Object.entries(def)[0]
+      getOrSetDefault(inverseRelations, type, createEmptyObject)[name] = [model[nameSymbol], relationKey, true]
+      getOrSetDefault(inverseRelations, model[nameSymbol], createEmptyObject)[relationKey] = [type, name, false]
       Object.defineProperty(typeInit, name, { value: model, enumerable: true })
       // schema[name] = allRelationships[model[nameSymbol]].schema
       store[model[nameSymbol]].addRelation(relationKey, {
@@ -307,6 +376,6 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
 // 2. Figure out new type for handling document status: { id: UUID(document), pubished: UUID(revision), archived: Boolean }
 // Bonus:
 // add assoc related query methods (like include)  - DONE
-// assoc filtering doc vs revision - DONE (only doc)
-// + archived docs in assoc filtering - DONE
+// assoc includers doc vs revision - DONE (only doc)
+// + archived docs in assoc includers - DONE
 // + filtering in normal getters

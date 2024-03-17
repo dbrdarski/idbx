@@ -192,17 +192,22 @@ export default (store, storeHelpers) => {
   }
 
   return (data, ids) => {
-    let i = 0
+    // let i = 0
+    const iterator = ids[Symbol.iterator]()
     const query = getActiveQueryInstance()
     return new Query(
       query,
       next => {
-        if (i < ids.length) {
-          const key = ids[i++]
-          next(data[key], key, data)
-          return true
-        }
-        return false
+        // if (i < ids.length) {
+        //   const key = ids[i++]
+        //   next(data[key], key, data)
+        // return true
+        // }
+        // return false
+        const { value: key, done } = iterator.next()
+        return done
+          ? false
+          : (next(data[key], key, data), true)
       }
     )
   }
