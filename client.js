@@ -36,15 +36,21 @@ const renderer = target => [
     }
 
     return {
-      user () {
+      user() {
         return class User {
           name = String
           email = String
         }
       },
-      post ({ tag, category }) {
+      post({
+        tag, category, // user
+      }) {
         const Tag = this.belongsToMany({ tag })
         const Category = this.belongsToMany({ category })
+
+        // const Author = this.belongsToOne({ author: user })
+        // const Subscribers = this.belongsToMany({ subscribers: user })
+
         class Taxonomies {
           tags = Array(Tag)
           categories = Array(Category)
@@ -55,27 +61,23 @@ const renderer = target => [
           taxonomies = Taxonomies
         }
       },
-      page () {
+      page() {
         return class Page {
           header = TaxonomyHead
           body = Vdom
         }
       },
-      category ({ post }) {
+      category({ post }) {
         this.publish = true
-        this.hasMany({
-          post
-        }, "category")
+        this.hasMany({ post }, "category")
         return TaxonomyHead
       },
-      tag ({ post }) {
+      tag({ post }) {
         this.publish = true
-        this.hasMany({
-          post
-        }, "tag")
+        this.hasMany({ post }, "tag")
         return TaxonomyHead
       },
-      pageTree ({ page }) {
+      pageTree({ page }) {
         const Page = this.belongsToMany({ page })
         return class Route {
           page_id = Page
@@ -93,24 +95,30 @@ const renderer = target => [
 
   cezare_borgia_JSON.tag = "div"
   cezare_borgia_JSON.attrs.contenteditable = true
-  const [ readDOM, writeDOM ] = renderer(document.body.querySelector("#app"))
+  const [readDOM, writeDOM] = renderer(document.body.querySelector("#app"))
 
-  const getRevisionByIndex = index => r.query(($)=> $.doc.getRevisions().data())[index]
-  const loadRevision = i => {
-    const r = getRevisionByIndex(i)
-    writeDOM(r.data)
-    return r
-  }
+  // r.query(
+  //   $ => $.tag.queryRelationship(
+  //     tag => tag.post.category(1, 2, 3)
+  //   )
+  // )
 
-  const saveRevision = ({ document: { id, type } = {}, revision: { from } = {}} = {}) => {
-    r.save({
-      id,
-      type: "doc",
-      data: readDOM(),
-      from,
-      publish: true
-    })
-  }
+  // const getRevisionByIndex = index => r.query(($) => $.doc.getRevisions().data())[index]
+  // const loadRevision = i => {
+  //   const r = getRevisionByIndex(i)
+  //   writeDOM(r.data)
+  //   return r
+  // }
+
+  // const saveRevision = ({ document: { id, type } = {}, revision: { from } = {} } = {}) => {
+  //   r.save({
+  //     id,
+  //     type: "doc",
+  //     data: readDOM(),
+  //     from,
+  //     publish: true
+  //   })
+  // }
 
   Object.assign(globalThis, {
     render,
@@ -120,9 +128,9 @@ const renderer = target => [
     repository,
     db,
     repo,
-    getRevisionByIndex,
-    loadRevision,
-    saveRevision,
+    // getRevisionByIndex,
+    // loadRevision,
+    // saveRevision,
     macros_article_JSON,
     cezare_borgia_JSON
   })
