@@ -142,28 +142,13 @@ OK, so few notes here:
 
 =====================================================================
 
-So apparently it has come to my attention that 'archived' property
-can become part of document: { type, id }, meta { author, timestamp }
-can become part of revision and data field can be renamed to 'record'
+Conclusion for relational querying
+*********************************************************************
+Instead of Post.latest({ rel: post => post.tag() })
+
+Instead of Post.latest({ from: post => post.tag.latest() })
 
 ---------------------------------------------------------------------
-
-Also active (revision) could be part of document as well now that I
-think about it and 'published' should be boolean!
-
----------------------------------------------------------------------
-
-EDIT:
-The 'published' and 'archived' properties can be included both in the revision
-and document to actually to distinguish between document and revision state.
-
-payload: {
-  document: { type: String, id: UUID, published: Boolean, archived: Boolean, active: UUID },
-  revision: { id: UUID, published: Boolean, archived: Boolean, author: UUID, timestamp: Number }
-  record:  { ...data }
-}
-
-document: { published, archived, active } should all be enumerable getters
 
 All in due time though!
 `)

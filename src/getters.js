@@ -144,7 +144,10 @@ export const generateGetters = (instance, store, methods, type) => {
         )
       }
     },
-    revisions({ id, rel, archived = false, published } = {}) {
+    revisions({
+      // rel,
+      id, archived = false, published
+    } = {}) {
       const mode = published === true ? "publications" : published === false ? "drafts" : "revisions"
       if (id) {
         const document = documents.byId[id]
@@ -152,17 +155,18 @@ export const generateGetters = (instance, store, methods, type) => {
         if (!document || !status) {
           return queryCollection({}, [])
         }
-        const ids = queryRelationship(rel, false) ?? records[mode].ids
+        // const ids = queryRelationship(rel, false) ?? records[mode].ids
         return queryCollection(
-          rel?.inversed ? records.revisions.byId : documents.byId,
-          queryRelationship(rel, false) ?? document[mode].ids
+          records.revisions.byId,
+          ids
         )
       } else {
         const matchStatus = archived == null ? null : document => document.archived === archived
-        const ids = queryRelationship(rel, false) ?? records[mode].ids
+        // const ids = queryRelationship(rel, false) ?? records[mode].ids
         return queryCollection(
-          rel?.inversed ? records.revisions.byId : documents.byId,
-          ids
+          records.revisions.byId,
+          // rel ? ids :
+          records[mode].ids
         ).find(
           matchStatus
         )

@@ -177,7 +177,7 @@ export const generateRelations = (context, store, methods, type, typeInit, def) 
     *[Symbol.iterator]() {
       const { [key]: entries } = relationships
       const passed = new Set
-      for (const x of ids ?? Object.values(entries)) {
+      for (const x of (ids ?? Object.values(entries))) {
         for (const item of ids
           ? entries[x]?.[targetType] ?? []
           : x[targetType]
