@@ -35,9 +35,9 @@ const isArchived = Symbol("isArchived")
 const documentId = Symbol("documentId")
 const revisionId = Symbol("revisionId")
 
-const allRelationships = window.allRelationships = {}
+const allRelationships = {}
 const relStore = new Map()
-const inverseRelations = window.inverseRelations = {}
+const inverseRelations = {}
 
 // p.get = Proxy(model :: Model, handler :: Iterable => Iterable)
 export const generateRelations = (context, store, methods, type, typeInit, def) => {
