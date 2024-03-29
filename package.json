@@ -12,6 +12,7 @@
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "author": "",
   "license": "ISC",
+  "type": "module",
   "devDependencies": {
     "parcel": "latest"
   },
